@@ -1,0 +1,19 @@
+{
+  "name": "orkid",
+  "version": "0.0.0",
+  "description": "Task Scheduler",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mugli/orkid.git"
+  },
+  "author": "Mehdi Hasan Khan <mhasan@omicronlab.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/mugli/orkid/issues"
+  },
+  "homepage": "https://github.com/mugli/orkid#readme"
+}
