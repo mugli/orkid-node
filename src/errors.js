@@ -5,6 +5,13 @@ class TimeoutError extends Error {
   }
 }
 
+class InvalidConfigError extends Error {
+  constructor(...args) {
+    super(...args);
+    Error.captureStackTrace(this, InvalidConfigError);
+  }
+}
+
 module.exports = {
-  TimeoutError
+  InvalidConfigError
 };

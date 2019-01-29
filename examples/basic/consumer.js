@@ -8,5 +8,5 @@ async function worker(data, metadata) {
   console.log(`Task ${metadata.id} done!`);
 }
 
-const consumer = new Consumer('basic', worker);
+const consumer = new Consumer('basic', worker, { consumerOptions: { concurrency: 2 } });
 consumer.start();
