@@ -1,3 +1,6 @@
+const prepareIoredis = require('./prepare-ioredis.js');
+prepareIoredis();
+
 const IORedis = require('ioredis');
 const lodash = require('lodash');
 
@@ -5,12 +8,9 @@ const { ReplyError } = require('redis-errors');
 const { TimeoutError } = require('./errors');
 
 const defaults = require('./defaults');
-const {
-  options: { redis }
-} = require('./options').getOptions();
 
 class Consumer {
-  constructor(qname, workerFn, options) {
+  constructor(qname, workerFn, { consumerOptions, redisOptions, loggingOptions }) {
     this.QNAME = `${defaults.NAMESPACE}:${qname}`;
     this.GRPNAME = `${defaults.NAMESPACE}:${qname}:cg`;
 
@@ -18,9 +18,11 @@ class Consumer {
     this.pendingTasks = [];
     this.totalTasks = 0;
 
-    this.options = lodash.merge({}, defaults.consumer, options);
+    this.consumerOptions = lodash.merge({}, defaults.consumer, consumerOptions);
+    this.redisOptions = lodash.merge({}, defaults.redis, redisOptions);
+    this.loggingOptions = lodash.merge({}, defaults.logging, loggingOptions);
 
-    this.redis = new IORedis(redis);
+    this.redis = new IORedis(this.redisOptions);
     this.redis.on('connect', this.register.bind(this));
   }
 
@@ -63,7 +65,7 @@ class Consumer {
       this.GRPNAME,
       this.name,
       'COUNT',
-      this.options.taskBufferSize,
+      this.consumerOptions.taskBufferSize,
       'STREAMS',
       this.QNAME,
       '0'
@@ -109,7 +111,7 @@ class Consumer {
       if (consumerInfo[con].pending) {
         pendingConsumerNames.add(con);
       } else {
-        if (consumerInfo[con].idle > this.options.workerFnTimeoutMs * 5) {
+        if (consumerInfo[con].idle > this.consumerOptions.workerFnTimeoutMs * 5) {
           // Just to be safe, only delete really world consumers
           emptyConsumerNames.add(con);
         }
@@ -142,7 +144,7 @@ class Consumer {
         this.QNAME,
         this.GRPNAME,
         this.name,
-        this.options.workerFnTimeoutMs * 2,
+        this.consumerOptions.workerFnTimeoutMs * 2,
         ...ids,
         'JUSTID'
       );
@@ -205,12 +207,20 @@ class Consumer {
       const to = setTimeout(() => {
         clearTimeout(to);
         reject(new TimeoutError());
-      }, this.options.workerFnTimeoutMs);
+      }, this.consumerOptions.workerFnTimeoutMs);
     });
 
     const workerP = Promise.resolve(this.workerFn(taskId, taskData));
 
     return Promise.race([timeoutP, workerP]);
+  }
+
+  pause() {
+    // TODO: Implement
+  }
+
+  resume() {
+    // TODO: Implement
   }
 }
 

@@ -1,31 +1,26 @@
+const prepareIoredis = require('./prepare-ioredis.js');
+prepareIoredis();
+
 const IORedis = require('ioredis');
 const lodash = require('lodash');
 
-const {
-  options: { redis }
-} = require('./options').getOptions();
 const defaults = require('./defaults');
 
 class Producer {
-  constructor(qname, options) {
-    this.options = lodash.merge({}, defaults.producer, options);
-    this.redis = new IORedis(redis);
+  constructor(qname, { redisOptions }) {
+    this.redisOptions = lodash.merge({}, defaults.redis, redisOptions);
+    this.redis = new IORedis(this.redisOptions);
     this.QNAME = `${defaults.NAMESPACE}:${qname}`;
   }
 
   addTask(data, dedupKey) {
+    // TODO: Implement dedupKey functionality (add to redis set SADD, if successful, add to STREAM)
+    // After processing is done/failed in consumer, also remove from the set if dedupKey is present
+    // in task
     return this.redis.xadd(this.QNAME, '*', 'data', JSON.stringify(data), 'dedupKey', dedupKey);
   }
 
   addRepeatedTask(cron, producerFn) {}
-
-  disconnect() {
-    // TODO: Implement
-  }
-
-  connect() {
-    // TODO: Implement
-  }
 }
 
 module.exports = Producer;
