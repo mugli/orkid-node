@@ -5,7 +5,7 @@ module.exports = {
     deduplicate: false
   },
   consumer: {
-    workerFnTimeoutMs: 10 * 1000,
+    workerFnTimeoutMs: 7 * 24 * 60 * 60 * 1000,
     taskBufferSize: 10,
     maxRetry: 0
   },

@@ -10,8 +10,9 @@ const { TimeoutError } = require('./errors');
 const defaults = require('./defaults');
 
 class Consumer {
-  constructor(qname, workerFn, { consumerOptions, redisOptions, loggingOptions }) {
+  constructor(qname, workerFn, { consumerOptions, redisOptions, loggingOptions } = {}) {
     this.QNAME = `${defaults.NAMESPACE}:${qname}`;
+    this.qname = qname;
     this.GRPNAME = `${defaults.NAMESPACE}:${qname}:cg`;
 
     this.workerFn = workerFn;
@@ -26,9 +27,22 @@ class Consumer {
     this.redis.on('connect', this.register.bind(this));
   }
 
+  start() {
+    this.processLoop();
+  }
+
+  pause() {
+    // TODO: Implement
+  }
+
+  resume() {
+    // TODO: Implement
+  }
+
   async createConsumerGroup() {
     try {
       // XGROUP CREATE mystream mygroup 0 MKSTREAM
+      console.log('Ensuring consumer group exists', { QNAME: this.QNAME, GRPNAME: this.GRPNAME });
       await this.redis.xgroup('CREATE', this.QNAME, this.GRPNAME, 0, 'MKSTREAM');
     } catch (e) {
       // BUSYGROUP -> the consumer group is already present, ignore
@@ -50,11 +64,6 @@ class Consumer {
     await this.redis.client('SETNAME', this.name);
 
     await this.createConsumerGroup();
-
-    if (!this.loopStarted) {
-      this.loopStarted = true;
-      this.processLoop();
-    }
   }
 
   async getPendingTasks() {
@@ -182,9 +191,12 @@ class Consumer {
     const task = this.pendingTasks.shift();
     console.log(this.name, ' :: Staring to process task', task);
     this.totalTasks++;
-    await this.wrapWorkerFn(task.id, task.data)
+    const data = JSON.parse(task.data.data);
+    const metadata = { id: task.id, qname: this.qname };
+    await this.wrapWorkerFn(data, metadata)
       .then(val => {
         // TODO: store returned result in a capped list
+        // TODO: Remove from set if task.data.dedupKey present
         console.log('✅ ', this.name, ` :: DONE!! Worker ${task.id} done working`, val);
         return this.redis.xack(this.QNAME, this.GRPNAME, task.id);
       })
@@ -198,11 +210,12 @@ class Consumer {
         // FIXME: Temporarily removing from the queue
         // TODO: store error in a capped list or
         // TODO: retry until retry limit, move to retry queue
+        // TODO: Remove from set if task.data.dedupKey present
         return this.redis.xack(this.QNAME, this.GRPNAME, task.id);
       });
   }
 
-  wrapWorkerFn(taskId, taskData) {
+  wrapWorkerFn(data, metadata) {
     const timeoutP = new Promise((resolve, reject) => {
       const to = setTimeout(() => {
         clearTimeout(to);
@@ -210,17 +223,9 @@ class Consumer {
       }, this.consumerOptions.workerFnTimeoutMs);
     });
 
-    const workerP = Promise.resolve(this.workerFn(taskId, taskData));
+    const workerP = Promise.resolve(this.workerFn(data, metadata));
 
     return Promise.race([timeoutP, workerP]);
-  }
-
-  pause() {
-    // TODO: Implement
-  }
-
-  resume() {
-    // TODO: Implement
   }
 }
 

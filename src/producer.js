@@ -7,7 +7,7 @@ const lodash = require('lodash');
 const defaults = require('./defaults');
 
 class Producer {
-  constructor(qname, { redisOptions }) {
+  constructor(qname, { redisOptions } = {}) {
     this.redisOptions = lodash.merge({}, defaults.redis, redisOptions);
     this.redis = new IORedis(this.redisOptions);
     this.QNAME = `${defaults.NAMESPACE}:${qname}`;
