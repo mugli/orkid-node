@@ -3,10 +3,15 @@ prepareIoredis();
 
 const Producer = require('./producer');
 const Consumer = require('./consumer');
-const config = require('./config');
+
+const options = require('./options');
+
+function init(userOptions) {
+  options.setOptions(userOptions);
+}
 
 module.exports = {
   Producer,
   Consumer,
-  config
+  init
 };

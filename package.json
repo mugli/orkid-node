@@ -17,6 +17,7 @@
   },
   "homepage": "https://github.com/mugli/orkid#readme",
   "dependencies": {
-    "ioredis": "^4.5.1"
+    "ioredis": "^4.5.1",
+    "lodash": "^4.17.11"
   }
 }
