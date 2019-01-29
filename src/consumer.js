@@ -8,7 +8,7 @@ const { InvalidConfigError } = require('./errors');
 class Consumer {
   constructor(qname, workerFn, options = {}) {
     this.consumerOptions = lodash.merge({}, defaults.consumerOptions, options.consumerOptions);
-    this.concurrency = this.consumerOptions.concurrency;
+    this.concurrency = this.consumerOptions.concurrencyPerInstance;
 
     if (this.concurrency < 1) {
       throw new InvalidConfigError('Concurrency cannot be less than 1');
