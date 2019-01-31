@@ -11,9 +11,9 @@ const defaults = require('./defaults');
 
 class ConsumerUnit {
   constructor(qname, workerFn, { consumerOptions, redisOptions, loggingOptions } = {}) {
-    this.QNAME = `${defaults.NAMESPACE}:${qname}`;
+    this.QNAME = `${defaults.NAMESPACE}:queue:${qname}`;
     this.qname = qname;
-    this.GRPNAME = `${defaults.NAMESPACE}:${qname}:cg`;
+    this.GRPNAME = `${defaults.NAMESPACE}:queue:${qname}:cg`;
 
     this.workerFn = workerFn;
     this.pendingTasks = [];
@@ -62,7 +62,7 @@ class ConsumerUnit {
     }
 
     const id = await this.redis.client('id');
-    this.name = this.GRPNAME + ':c:' + id; // TODO: Append a GUID just to be safe since we are reusing names upon client reconnect
+    this.name = `${this.GRPNAME}:c:${id}`; // TODO: Append a GUID just to be safe since we are reusing names upon client reconnect
     await this.redis.client('SETNAME', this.name);
 
     await this.createConsumerGroup();
@@ -195,26 +195,35 @@ class ConsumerUnit {
     this.totalTasks++;
     const data = JSON.parse(task.data.data);
     const metadata = { id: task.id, qname: this.qname };
-    await this.wrapWorkerFn(data, metadata)
-      .then(val => {
-        // TODO: store returned result in a capped list
-        // TODO: Remove from set if task.data.dedupKey present
-        console.log('✅ ', this.name, ` :: DONE!! Worker ${task.id} done working`, val);
-        return this.redis.xack(this.QNAME, this.GRPNAME, task.id);
-      })
-      .catch(e => {
-        if (e instanceof TimeoutError) {
-          console.log('⏰ ', this.name, `:: Worker ${task.id} timed out`, e);
-        } else {
-          console.log('💣 ', this.name, ` :: Worker ${task.id} crashed`, e);
-        }
+    try {
+      const val = await this.wrapWorkerFn(data, metadata);
+      // TODO: Remove from set if task.data.dedupKey present.
+      console.log('✅ ', this.name, ` :: DONE!! Worker ${task.id} done working`, val);
+      await this.redis.xack(this.QNAME, this.GRPNAME, task.id);
 
-        // FIXME: Temporarily removing from the queue
-        // TODO: store error in a capped list or
-        // TODO: retry until retry limit, move to retry queue
-        // TODO: Remove from set if task.data.dedupKey present
-        return this.redis.xack(this.QNAME, this.GRPNAME, task.id);
+      const result = JSON.stringify({
+        id: task.id,
+        consumer: this.name,
+        qname: this.qname,
+        data,
+        result: val,
+        doneAt: new Date().toISOString()
       });
+      await this.redis.lpush(defaults.RESULTLIST, result);
+      await this.redis.ltrim(defaults.RESULTLIST, 0, defaults.queueOptions.maxResultListSize - 1);
+    } catch (e) {
+      if (e instanceof TimeoutError) {
+        console.log('⏰ ', this.name, `:: Worker ${task.id} timed out`, e);
+      } else {
+        console.log('💣 ', this.name, ` :: Worker ${task.id} crashed`, e);
+      }
+
+      // FIXME: Temporarily removing from the queue
+      // TODO: store error in a capped list or
+      // TODO: retry until retry limit, move to retry queue
+      // TODO: Remove from set if task.data.dedupKey present
+      await this.redis.xack(this.QNAME, this.GRPNAME, task.id);
+    }
   }
 
   wrapWorkerFn(data, metadata) {
@@ -225,7 +234,7 @@ class ConsumerUnit {
       }, this.consumerOptions.workerFnTimeoutMs);
     });
 
-    const workerP = Promise.resolve(this.workerFn(data, metadata));
+    const workerP = this.workerFn(data, metadata);
 
     return Promise.race([timeoutP, workerP]);
   }
