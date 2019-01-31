@@ -28,15 +28,17 @@ class ConsumerUnit {
   }
 
   start() {
+    this.paused = false;
     this.processLoop();
   }
 
   pause() {
-    // TODO: Implement
+    this.paused = true;
   }
 
   resume() {
-    // TODO: Implement
+    this.paused = false;
+    this.processLoop();
   }
 
   async createConsumerGroup() {
@@ -177,10 +179,10 @@ class ConsumerUnit {
         await this.waitForTask();
       }
 
-      while (this.pendingTasks.length) {
+      while (this.pendingTasks.length && !this.paused) {
         await this.processTask();
       }
-    } while (true);
+    } while (!this.paused);
   }
 
   async processTask() {
