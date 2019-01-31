@@ -29,7 +29,7 @@ class ConsumerUnit {
 
   start() {
     this.paused = false;
-    this.processLoop();
+    this.ensureConsumerGroupExists().then(() => this.processLoop());
   }
 
   pause() {
@@ -41,7 +41,7 @@ class ConsumerUnit {
     this.processLoop();
   }
 
-  async createConsumerGroup() {
+  async ensureConsumerGroupExists() {
     try {
       // XGROUP CREATE mystream mygroup 0 MKSTREAM
       console.log('Ensuring consumer group exists', { QNAME: this.QNAME, GRPNAME: this.GRPNAME });
@@ -64,8 +64,6 @@ class ConsumerUnit {
     const id = await this.redis.client('id');
     this.name = `${this.GRPNAME}:c:${id}`; // TODO: Append a GUID just to be safe since we are reusing names upon client reconnect
     await this.redis.client('SETNAME', this.name);
-
-    await this.createConsumerGroup();
   }
 
   async getPendingTasks() {
