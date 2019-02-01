@@ -6,7 +6,8 @@ const lodash = require('lodash');
 const shortid = require('shortid');
 
 const initScripts = require('./commands');
-const { delay, waitUntilInitialized } = require('./common');
+const { delay } = require('./common');
+const Task = require('./task');
 const { ReplyError } = require('redis-errors');
 const { TimeoutError } = require('./errors');
 
@@ -107,7 +108,10 @@ class ConsumerUnit {
 
     console.dir({ taskObj, tasks, pendingTasks: this.pendingTasks }, { depth: null });
 
-    this.pendingTasks.push(...tasks);
+    for (const t of tasks) {
+      const task = new Task(t.id, t.data);
+      this.pendingTasks.push(task);
+    }
   }
 
   async waitForTask() {
@@ -214,12 +218,11 @@ class ConsumerUnit {
     const task = this.pendingTasks.shift();
     console.log(this.name, ' :: Staring to process task', task);
     this.totalTasks++;
-    const data = JSON.parse(task.data.data);
-    const retryCount = JSON.parse(task.data.retryCount || 0);
-    const metadata = { id: task.id, qname: this.qname, retryCount };
+
+    const metadata = { id: task.id, qname: this.qname, retryCount: task.retryCount };
     try {
-      const result = await this.wrapWorkerFn(data, metadata);
-      await this.processSuccess(task, data, result);
+      const result = await this.wrapWorkerFn(task.dataObj, metadata);
+      await this.processSuccess(task, result);
     } catch (e) {
       if (e instanceof TimeoutError) {
         console.log('⏰ ', this.name, `:: Worker ${task.id} timed out`, e);
@@ -227,19 +230,18 @@ class ConsumerUnit {
         console.log('💣 ', this.name, ` :: Worker ${task.id} crashed`, e);
       }
 
-      await this.processFailure(task, data, e);
+      await this.processFailure(task, e);
     }
   }
 
-  async processSuccess(task, data, result) {
+  async processSuccess(task, result) {
     console.log('✅ ', this.name, ` :: DONE!! Worker ${task.id} done working`, result);
 
-    let retryCount = JSON.parse(task.data.retryCount || 0);
     const resultVal = JSON.stringify({
       id: task.id,
       qname: this.qname,
-      data,
-      retryCount,
+      data: task.dataObj,
+      retryCount: task.retryCount,
       result,
       at: new Date().toISOString()
     });
@@ -247,20 +249,19 @@ class ConsumerUnit {
     // Add to success list
     await this.redis
       .pipeline()
-      .dequeue(this.QNAME, this.DEDUPSET, this.GRPNAME, task.id, task.data.dedupKey) // Remove from queue
+      .dequeue(this.QNAME, this.DEDUPSET, this.GRPNAME, task.id, task.dedupKey) // Remove from queue
       .lpush(defaults.RESULTLIST, resultVal)
       .ltrim(defaults.RESULTLIST, 0, defaults.queueOptions.maxResultListSize - 1)
       .exec();
   }
 
-  async processFailure(task, data, error) {
-    let retryCount = JSON.parse(task.data.retryCount || 0);
+  async processFailure(task, error) {
     const info = JSON.stringify({
       id: task.id,
       qname: this.qname,
-      data,
-      dedupKey: task.data.dedupKey,
-      retryCount,
+      data: task.dataObj,
+      dedupKey: task.dedupKey,
+      retryCount: task.retryCount,
       error: {
         name: error.name,
         message: error.message,
@@ -269,23 +270,23 @@ class ConsumerUnit {
       at: new Date().toISOString()
     });
 
-    if (retryCount < this.consumerOptions.maxRetry) {
-      retryCount++;
+    if (task.retryCount < this.consumerOptions.maxRetry) {
+      task.incrRetry();
       // Send again to the queue
       await this.redis.requeue(
         this.QNAME,
         this.DEDUPSET,
         this.GRPNAME,
         task.id,
-        task.data.data,
-        task.data.dedupKey,
-        retryCount
+        task.dataString,
+        task.dedupKey,
+        task.retryCount
       );
     } else {
       // Move to deadlist
       await this.redis
         .pipeline()
-        .dequeue(this.QNAME, this.DEDUPSET, this.GRPNAME, task.id, task.data.dedupKey) // Remove from queue
+        .dequeue(this.QNAME, this.DEDUPSET, this.GRPNAME, task.id, task.dedupKey) // Remove from queue
         .lpush(defaults.DEADLIST, info)
         .ltrim(defaults.DEADLIST, 0, defaults.queueOptions.maxDeadListSize - 1)
         .exec();
