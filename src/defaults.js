@@ -1,13 +1,17 @@
 module.exports = {
   NAMESPACE: 'orkid',
   RESULTLIST: 'orkid:internals:results',
+  FAILEDLIST: 'orkid:internals:failed',
+  DEADLIST: 'orkid:internals:dead',
   redisOptions: {},
   producerOptions: {
     deduplicate: false
   },
   queueOptions: {
     // Currently there is no API to override these defaults
-    maxResultListSize: 1000
+    maxResultListSize: 10000,
+    maxFailedListSize: 100000,
+    maxDeadListSize: 100000
   },
   consumerOptions: {
     workerFnTimeoutMs: 24 * 60 * 60 * 1000,

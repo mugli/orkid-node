@@ -12,6 +12,7 @@ const defaults = require('./defaults');
 class ConsumerUnit {
   constructor(qname, workerFn, { consumerOptions, redisOptions, loggingOptions } = {}) {
     this.QNAME = `${defaults.NAMESPACE}:queue:${qname}`;
+    this.RETRYQNAME = `${defaults.NAMESPACE}:queue:${qname}:retry`;
     this.qname = qname;
     this.GRPNAME = `${defaults.NAMESPACE}:queue:${qname}:cg`;
 
@@ -27,9 +28,21 @@ class ConsumerUnit {
     this.redis.on('connect', this.register.bind(this));
   }
 
+  delay(time) {
+    return new Promise(res => setTimeout(() => res(), time));
+  }
+
+  async waitUntilInitialized() {
+    while (!this.initialized) {
+      await this.delay(50);
+    }
+  }
+
   start() {
-    this.paused = false;
-    this.ensureConsumerGroupExists().then(() => this.processLoop());
+    this.waitUntilInitialized().then(() => {
+      this.paused = false;
+      this.processLoop();
+    });
   }
 
   pause() {
@@ -37,8 +50,7 @@ class ConsumerUnit {
   }
 
   resume() {
-    this.paused = false;
-    this.processLoop();
+    this.start();
   }
 
   async ensureConsumerGroupExists() {
@@ -61,9 +73,15 @@ class ConsumerUnit {
       return;
     }
 
+    await this.initScripts();
+    await this.delay(100);
     const id = await this.redis.client('id');
     this.name = `${this.GRPNAME}:c:${id}`; // TODO: Append a GUID just to be safe since we are reusing names upon client reconnect
     await this.redis.client('SETNAME', this.name);
+
+    await this.ensureConsumerGroupExists();
+
+    this.initialized = true;
   }
 
   async getPendingTasks() {
@@ -148,6 +166,7 @@ class ConsumerUnit {
 
     for (const w of orphanWorkers) {
       const pendingTasks = await this.redis.xpending(this.QNAME, this.GRPNAME, '-', '+', 1000, w);
+      console.log({ pendingTasks });
       const ids = pendingTasks.map(t => t.id);
       const claim = await this.redis.xclaim(
         this.QNAME,
@@ -192,23 +211,11 @@ class ConsumerUnit {
     console.log(this.name, ' :: Staring to process task', task);
     this.totalTasks++;
     const data = JSON.parse(task.data.data);
-    const metadata = { id: task.id, qname: this.qname };
+    const retryCount = JSON.parse(task.data.retryCount || 0);
+    const metadata = { id: task.id, qname: this.qname, retryCount };
     try {
-      const val = await this.wrapWorkerFn(data, metadata);
-      // TODO: Remove from set if task.data.dedupKey present.
-      console.log('✅ ', this.name, ` :: DONE!! Worker ${task.id} done working`, val);
-      await this.redis.xack(this.QNAME, this.GRPNAME, task.id);
-
-      const result = JSON.stringify({
-        id: task.id,
-        consumer: this.name,
-        qname: this.qname,
-        data,
-        result: val,
-        doneAt: new Date().toISOString()
-      });
-      await this.redis.lpush(defaults.RESULTLIST, result);
-      await this.redis.ltrim(defaults.RESULTLIST, 0, defaults.queueOptions.maxResultListSize - 1);
+      const result = await this.wrapWorkerFn(data, metadata);
+      await this.processSuccess(task, data, result);
     } catch (e) {
       if (e instanceof TimeoutError) {
         console.log('⏰ ', this.name, `:: Worker ${task.id} timed out`, e);
@@ -216,20 +223,97 @@ class ConsumerUnit {
         console.log('💣 ', this.name, ` :: Worker ${task.id} crashed`, e);
       }
 
-      // FIXME: Temporarily removing from the queue
-      // TODO: store error in a capped list or
-      // TODO: retry until retry limit, move to retry queue
-      // TODO: Remove from set if task.data.dedupKey present
-      await this.redis.xack(this.QNAME, this.GRPNAME, task.id);
+      await this.processFailure(task, data, e);
     }
   }
 
+  async initScripts() {
+    // TODO: Handle deduplication if dedupKey present
+    await this.redis.defineCommand('requeue', {
+      numberOfKeys: 1,
+      /*
+        KEYS[1] = this.QNAME
+        ARGV[1] = this.GRPNAME
+        ARGV[2] = task.id
+        ARGV[3] = data
+        ARGV[4] = dedupKey
+        ARGV[5] = retryCount
+      */
+      lua: `
+      redis.call("XADD", KEYS[1], "*", "data", ARGV[3], "dedupKey", ARGV[4], "retryCount", ARGV[5])
+      redis.call("XACK", KEYS[1], ARGV[1], ARGV[2])
+      `
+    });
+  }
+
+  async processSuccess(task, data, result) {
+    // TODO: Remove from set if task.data.dedupKey present.
+    console.log('✅ ', this.name, ` :: DONE!! Worker ${task.id} done working`, result);
+
+    let retryCount = JSON.parse(task.data.retryCount || 0);
+    const resultVal = JSON.stringify({
+      id: task.id,
+      qname: this.qname,
+      data,
+      retryCount,
+      result,
+      at: new Date().toISOString()
+    });
+
+    // Add to success list
+    await this.redis
+      .pipeline()
+      .xack(this.QNAME, this.GRPNAME, task.id) // Remove from queue
+      .lpush(defaults.RESULTLIST, resultVal)
+      .ltrim(defaults.RESULTLIST, 0, defaults.queueOptions.maxResultListSize - 1)
+      .exec();
+  }
+
+  async processFailure(task, data, error) {
+    // TODO: Remove from set if task.data.dedupKey present
+    let retryCount = JSON.parse(task.data.retryCount || 0);
+    const info = JSON.stringify({
+      id: task.id,
+      qname: this.qname,
+      data,
+      dedupKey: task.data.dedupKey,
+      retryCount,
+      error: {
+        name: error.name,
+        message: error.message,
+        stack: error.stack
+      },
+      at: new Date().toISOString()
+    });
+
+    if (retryCount < this.consumerOptions.maxRetry) {
+      retryCount++;
+      await this.redis.requeue(this.QNAME, this.GRPNAME, task.id, task.data.data, task.data.dedupKey, retryCount);
+    } else {
+      // Move to deadlist
+      await this.redis
+        .pipeline()
+        .xack(this.QNAME, this.GRPNAME, task.id) // Remove from queue
+        .lpush(defaults.DEADLIST, info)
+        .ltrim(defaults.DEADLIST, 0, defaults.queueOptions.maxDeadListSize - 1)
+        .exec();
+    }
+
+    // Add to failed list in all cases
+    await this.redis
+      .pipeline()
+      .lpush(defaults.FAILEDLIST, info)
+      .ltrim(defaults.FAILEDLIST, 0, defaults.queueOptions.maxFailedListSize - 1)
+      .exec();
+  }
+
   wrapWorkerFn(data, metadata) {
+    const timeoutMs = this.consumerOptions.workerFnTimeoutMs;
     const timeoutP = new Promise((resolve, reject) => {
       const to = setTimeout(() => {
         clearTimeout(to);
-        reject(new TimeoutError());
-      }, this.consumerOptions.workerFnTimeoutMs);
+        reject(new TimeoutError(`Task timed out after ${timeoutMs}ms`));
+      }, timeoutMs);
     });
 
     const workerP = this.workerFn(data, metadata);
