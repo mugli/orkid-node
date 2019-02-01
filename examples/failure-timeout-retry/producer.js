@@ -1,6 +1,6 @@
 const { Producer } = require('../../src/');
 
-const producer = new Producer('basic');
+const producer = new Producer('retriable-queue');
 
 async function addTasks() {
   for (let i = 0; i < 5; i++) {

@@ -25,7 +25,7 @@ async function worker(data, metadata) {
   return result;
 }
 
-const consumer = new Consumer('basic', worker, {
+const consumer = new Consumer('retriable-queue', worker, {
   consumerOptions: { concurrencyPerInstance: 1, maxRetry: 1, workerFnTimeoutMs: 3000 }
 });
 consumer.start();
