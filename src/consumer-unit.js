@@ -4,6 +4,8 @@ prepareIoredis();
 const IORedis = require('ioredis');
 const lodash = require('lodash');
 
+const initScripts = require('./commands');
+const { delay, waitUntilInitialized } = require('./common');
 const { ReplyError } = require('redis-errors');
 const { TimeoutError } = require('./errors');
 
@@ -11,8 +13,11 @@ const defaults = require('./defaults');
 
 class ConsumerUnit {
   constructor(qname, workerFn, { consumerOptions, redisOptions, loggingOptions } = {}) {
+    this.paused = true;
+
     this.QNAME = `${defaults.NAMESPACE}:queue:${qname}`;
     this.RETRYQNAME = `${defaults.NAMESPACE}:queue:${qname}:retry`;
+    this.DEDUPSET = `${defaults.NAMESPACE}:queue:${qname}:dedupset`;
     this.qname = qname;
     this.GRPNAME = `${defaults.NAMESPACE}:queue:${qname}:cg`;
 
@@ -25,20 +30,20 @@ class ConsumerUnit {
     this.loggingOptions = lodash.merge({}, defaults.loggingOptions, loggingOptions);
 
     this.redis = new IORedis(this.redisOptions);
-    this.redis.on('connect', this.register.bind(this));
-  }
-
-  delay(time) {
-    return new Promise(res => setTimeout(() => res(), time));
+    this.redis.on('connect', this.initialize.bind(this));
   }
 
   async waitUntilInitialized() {
     while (!this.initialized) {
-      await this.delay(50);
+      await delay(50);
     }
   }
 
   start() {
+    if (!this.paused) {
+      return;
+    }
+
     this.waitUntilInitialized().then(() => {
       this.paused = false;
       this.processLoop();
@@ -66,15 +71,15 @@ class ConsumerUnit {
     }
   }
 
-  async register() {
+  async initialize() {
     if (this.name) {
       // We already have a name? Reconnecting in this case
       await this.redis.client('SETNAME', this.name);
       return;
     }
 
-    await this.initScripts();
-    await this.delay(100);
+    await initScripts(this.redis);
+    await delay(100); // Not sure if needed here. Does ioredis.defineCommand return a promise?
     const id = await this.redis.client('id');
     this.name = `${this.GRPNAME}:c:${id}`; // TODO: Append a GUID just to be safe since we are reusing names upon client reconnect
     await this.redis.client('SETNAME', this.name);
@@ -227,27 +232,7 @@ class ConsumerUnit {
     }
   }
 
-  async initScripts() {
-    // TODO: Handle deduplication if dedupKey present
-    await this.redis.defineCommand('requeue', {
-      numberOfKeys: 1,
-      /*
-        KEYS[1] = this.QNAME
-        ARGV[1] = this.GRPNAME
-        ARGV[2] = task.id
-        ARGV[3] = data
-        ARGV[4] = dedupKey
-        ARGV[5] = retryCount
-      */
-      lua: `
-      redis.call("XADD", KEYS[1], "*", "data", ARGV[3], "dedupKey", ARGV[4], "retryCount", ARGV[5])
-      redis.call("XACK", KEYS[1], ARGV[1], ARGV[2])
-      `
-    });
-  }
-
   async processSuccess(task, data, result) {
-    // TODO: Remove from set if task.data.dedupKey present.
     console.log('✅ ', this.name, ` :: DONE!! Worker ${task.id} done working`, result);
 
     let retryCount = JSON.parse(task.data.retryCount || 0);
@@ -263,7 +248,7 @@ class ConsumerUnit {
     // Add to success list
     await this.redis
       .pipeline()
-      .xack(this.QNAME, this.GRPNAME, task.id) // Remove from queue
+      .dequeue(this.QNAME, this.DEDUPSET, this.GRPNAME, task.id, task.data.dedupKey) // Remove from queue
       .lpush(defaults.RESULTLIST, resultVal)
       .ltrim(defaults.RESULTLIST, 0, defaults.queueOptions.maxResultListSize - 1)
       .exec();
@@ -288,12 +273,21 @@ class ConsumerUnit {
 
     if (retryCount < this.consumerOptions.maxRetry) {
       retryCount++;
-      await this.redis.requeue(this.QNAME, this.GRPNAME, task.id, task.data.data, task.data.dedupKey, retryCount);
+      // Send again to the queue
+      await this.redis.requeue(
+        this.QNAME,
+        this.DEDUPSET,
+        this.GRPNAME,
+        task.id,
+        task.data.data,
+        task.data.dedupKey,
+        retryCount
+      );
     } else {
       // Move to deadlist
       await this.redis
         .pipeline()
-        .xack(this.QNAME, this.GRPNAME, task.id) // Remove from queue
+        .dequeue(this.QNAME, this.DEDUPSET, this.GRPNAME, task.id, task.data.dedupKey) // Remove from queue
         .lpush(defaults.DEADLIST, info)
         .ltrim(defaults.DEADLIST, 0, defaults.queueOptions.maxDeadListSize - 1)
         .exec();
