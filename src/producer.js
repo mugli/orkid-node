@@ -36,7 +36,7 @@ class Producer {
   async addTask(data, dedupKey) {
     await this.waitUntilInitialized();
 
-    await this.redis.enqueue(this.QNAME, this.DEDUPSET, JSON.stringify(data), dedupKey, 0);
+    return await this.redis.enqueue(this.QNAME, this.DEDUPSET, JSON.stringify(data), dedupKey, 0);
   }
 
   addRepeatedTask(cron, producerFn) {
