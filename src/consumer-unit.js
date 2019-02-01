@@ -82,7 +82,7 @@ class ConsumerUnit {
     await initScripts(this.redis);
     await delay(100); // Not sure if needed here. Does ioredis.defineCommand return a promise?
     const id = await this.redis.client('id');
-    this.name = `${this.GRPNAME}:c:${id}-${shortid.generate()}`; // TODO: Append a GUID just to be safe since we are reusing names upon client reconnect
+    this.name = `${this.GRPNAME}:c:${id}-${shortid.generate()}`;
     await this.redis.client('SETNAME', this.name);
 
     await this.ensureConsumerGroupExists();
