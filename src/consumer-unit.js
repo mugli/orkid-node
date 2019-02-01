@@ -3,6 +3,7 @@ prepareIoredis();
 
 const IORedis = require('ioredis');
 const lodash = require('lodash');
+const shortid = require('shortid');
 
 const initScripts = require('./commands');
 const { delay, waitUntilInitialized } = require('./common');
@@ -81,7 +82,7 @@ class ConsumerUnit {
     await initScripts(this.redis);
     await delay(100); // Not sure if needed here. Does ioredis.defineCommand return a promise?
     const id = await this.redis.client('id');
-    this.name = `${this.GRPNAME}:c:${id}`; // TODO: Append a GUID just to be safe since we are reusing names upon client reconnect
+    this.name = `${this.GRPNAME}:c:${id}-${shortid.generate()}`; // TODO: Append a GUID just to be safe since we are reusing names upon client reconnect
     await this.redis.client('SETNAME', this.name);
 
     await this.ensureConsumerGroupExists();
@@ -255,7 +256,6 @@ class ConsumerUnit {
   }
 
   async processFailure(task, data, error) {
-    // TODO: Remove from set if task.data.dedupKey present
     let retryCount = JSON.parse(task.data.retryCount || 0);
     const info = JSON.stringify({
       id: task.id,
