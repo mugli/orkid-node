@@ -186,9 +186,7 @@ class ConsumerUnit {
     }
 
     for (const w of orphanEmptyWorkers) {
-      // TODO: Possible candidate for Lua scripting?
-      // Check one more time that it has no pending tasks and then delete
-      await this.redis.xgroup('DELCONSUMER', this.QNAME, this.GRPNAME, w);
+      await this.redis.delconsumer(this.QNAME, this.GRPNAME, w);
       console.log(`🧹 ${this.name} :: Deleted old consumer ${w}`);
     }
   }

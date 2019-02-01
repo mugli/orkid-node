@@ -10,5 +10,5 @@ async function worker(data, metadata) {
   return result;
 }
 
-const consumer = new Consumer('basic', worker, { consumerOptions: { concurrencyPerInstance: 1 } });
+const consumer = new Consumer('deduped-queue', worker, { consumerOptions: { concurrencyPerInstance: 1 } });
 consumer.start();

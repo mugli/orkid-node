@@ -112,6 +112,40 @@ async function initScripts(redis) {
     })
   );
 
+  pArr.push(
+    redis.defineCommand('delconsumer', {
+      numberOfKeys: 3,
+      /*
+        KEYS[1] = this.QNAME
+        KEYS[2] = this.GRPNAME
+        KEYS[3] = this.CONSUMER
+      */
+      lua: `
+      local QNAME = KEYS[1]
+      local GRPNAME = KEYS[2]
+      local CONSUMER = KEYS[3]
+      
+      local consumers = redis.call("XINFO", "CONSUMERS", QNAME, GRPNAME)
+      local consumerMap = {}
+
+      for key, con in pairs(consumers) do
+        local cMap = {}
+        for i = 1, #con, 2 do
+          cMap[con[i]] = con[i + 1]
+        end
+
+        print('cMap', cMap)
+
+        consumerMap[cMap["name"]] = cMap
+      end
+
+      if consumerMap[CONSUMER] ~= nil and consumerMap[CONSUMER].pending == 0 then
+        redis.call("XGROUP", "DELCONSUMER", QNAME, GRPNAME, CONSUMER)
+      end
+      `
+    })
+  );
+
   await Promise.all(pArr);
 }
 

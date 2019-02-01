@@ -1,7 +1,5 @@
 const { Producer } = require('../../src/');
 
-const producer = new Producer('basic');
-
 const tasks = [
   {
     id: 0,
@@ -24,6 +22,8 @@ const tasks = [
     value: 'JcGDDE3A+jBGXEs'
   }
 ];
+
+const producer = new Producer('deduped-queue');
 
 async function addTasks() {
   for (const task of tasks) {
