@@ -2,9 +2,9 @@ function delay(time) {
   return new Promise(res => setTimeout(() => res(), time));
 }
 
-async function waitUntilInitialized(isInitialized) {
+async function waitUntilInitialized(thisObj, initializeVarName) {
   let counter = 0;
-  while (!isInitialized) {
+  while (!thisObj[initializeVarName]) {
     counter++;
     await delay(50);
 

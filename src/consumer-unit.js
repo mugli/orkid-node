@@ -36,15 +36,12 @@ class ConsumerUnit {
       this.redisOptions = lodash.merge({}, defaults.redisOptions, redisOptions);
       this._redis = new IORedis(this.redisOptions);
     }
+
     this._initialize();
   }
 
   start() {
-    if (!this._paused) {
-      return;
-    }
-
-    waitUntilInitialized(this._isInitialized).then(() => {
+    waitUntilInitialized(this, '_isInitialized').then(() => {
       this._paused = false;
       this._processLoop();
     });
@@ -205,6 +202,12 @@ class ConsumerUnit {
   }
 
   async _processLoop() {
+    if (this._loopStarted) {
+      return;
+    }
+
+    this._loopStarted = true;
+
     while (!this._paused) {
       await this._cleanUp();
       await this._getPendingTasks();
@@ -217,6 +220,8 @@ class ConsumerUnit {
         await this.processTask();
       }
     }
+
+    this._loopStarted = false;
   }
 
   async processTask() {
@@ -325,6 +330,7 @@ class ConsumerUnit {
 
   async _disconnect() {
     this._paused = true;
+    await waitUntilInitialized(this, '_isInitialized');
     await this._redis.disconnect();
   }
 }

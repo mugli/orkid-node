@@ -31,7 +31,7 @@ class Producer {
   }
 
   async addTask(data, dedupKey) {
-    await waitUntilInitialized(this._isInitialized);
+    await waitUntilInitialized(this, '_isInitialized');
 
     const retval = await this._redis.enqueue(this._QNAME, this._DEDUPSET, JSON.stringify(data), dedupKey, 0);
     return retval;

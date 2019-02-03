@@ -11,8 +11,8 @@ describe('Producer', () => {
     redis = new IORedis();
   });
 
-  afterAll(() => {
-    redis.disconnect();
+  afterAll(async () => {
+    await redis.disconnect();
   });
 
   beforeEach(async () => {
@@ -21,7 +21,7 @@ describe('Producer', () => {
   });
 
   afterEach(async () => {
-    producer._disconnect();
+    await producer._disconnect();
   });
 
   test('should create task', async () => {
