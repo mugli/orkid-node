@@ -27,11 +27,11 @@ class Producer {
   async _initialize() {
     await initScripts(this._redis);
 
-    this.isInitialized = true;
+    this._isInitialized = true;
   }
 
   async addTask(data, dedupKey) {
-    await waitUntilInitialized(this.isInitialized);
+    await waitUntilInitialized(this._isInitialized);
 
     const retval = await this._redis.enqueue(this._QNAME, this._DEDUPSET, JSON.stringify(data), dedupKey, 0);
     return retval;
