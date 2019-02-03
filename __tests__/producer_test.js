@@ -23,6 +23,10 @@ describe('Producer', () => {
     producer = new Producer('test-queue', { redisClient: redis });
   });
 
+  afterEach(async () => {
+    producer._disconnect();
+  });
+
   test('should create task', async () => {
     const id = await producer.addTask('test');
     expect(id).toBeDefined();

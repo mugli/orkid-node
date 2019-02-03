@@ -12,7 +12,7 @@ const defaults = require('./defaults');
 class Producer {
   constructor(qname, { redisOptions, redisClient } = {}) {
     if (redisClient) {
-      this.redis = redisClient;
+      this.redis = redisClient.duplicate();
     } else {
       this.redisOptions = lodash.merge({}, defaults.redisOptions, redisOptions);
       this.redis = new IORedis(this.redisOptions);
@@ -21,11 +21,10 @@ class Producer {
     this.QNAME = `${defaults.NAMESPACE}:queue:${qname}`;
     this.DEDUPSET = `${defaults.NAMESPACE}:queue:${qname}:dedupset`;
 
-    // this.redis.on('ready', this.initialize.bind(this));
-    this.initialize();
+    this._initialize();
   }
 
-  async waitUntilInitialized() {
+  async _waitUntilInitialized() {
     // TODO: Replace loop with an EventEmitter
     while (!this.initialized) {
       // console.log('Looping...');
@@ -33,20 +32,25 @@ class Producer {
     }
   }
 
-  async initialize() {
+  async _initialize() {
     await initScripts(this.redis);
 
     this.initialized = true;
   }
 
   async addTask(data, dedupKey) {
-    await this.waitUntilInitialized();
+    await this._waitUntilInitialized();
 
-    return await this.redis.enqueue(this.QNAME, this.DEDUPSET, JSON.stringify(data), dedupKey, 0);
+    const retval = await this.redis.enqueue(this.QNAME, this.DEDUPSET, JSON.stringify(data), dedupKey, 0);
+    return retval;
   }
 
   addCron(cron, producerFn) {
     // TODO: Implement
+  }
+
+  async _disconnect() {
+    await this.redis.disconnect();
   }
 }
 
