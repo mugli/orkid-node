@@ -14,40 +14,44 @@ const { TimeoutError } = require('./errors');
 const defaults = require('./defaults');
 
 class ConsumerUnit {
-  constructor(qname, workerFn, { consumerOptions, redisOptions, loggingOptions } = {}) {
-    this.paused = true;
+  constructor(qname, workerFn, { consumerOptions, redisOptions, redisClient, loggingOptions } = {}) {
+    this._paused = true;
 
-    this.QNAME = `${defaults.NAMESPACE}:queue:${qname}`;
-    this.RETRYQNAME = `${defaults.NAMESPACE}:queue:${qname}:retry`;
-    this.DEDUPSET = `${defaults.NAMESPACE}:queue:${qname}:dedupset`;
+    this._QNAME = `${defaults.NAMESPACE}:queue:${qname}`;
+    this._RETRYQNAME = `${defaults.NAMESPACE}:queue:${qname}:retry`;
+    this._DEDUPSET = `${defaults.NAMESPACE}:queue:${qname}:dedupset`;
     this.qname = qname;
-    this.GRPNAME = `${defaults.NAMESPACE}:queue:${qname}:cg`;
+    this._GRPNAME = `${defaults.NAMESPACE}:queue:${qname}:cg`;
 
     this.workerFn = workerFn;
-    this.pendingTasks = [];
-    this.totalTasks = 0;
+    this._pendingTasks = [];
+    this._totalTasks = 0;
 
     this.consumerOptions = lodash.merge({}, defaults.consumerOptions, consumerOptions);
-    this.redisOptions = lodash.merge({}, defaults.redisOptions, redisOptions);
     this.loggingOptions = lodash.merge({}, defaults.loggingOptions, loggingOptions);
 
-    this.redis = new IORedis(this.redisOptions);
+    if (redisClient) {
+      this._redis = redisClient.duplicate();
+    } else {
+      this.redisOptions = lodash.merge({}, defaults.redisOptions, redisOptions);
+      this._redis = new IORedis(this.redisOptions);
+    }
     this._initialize();
   }
 
   start() {
-    if (!this.paused) {
+    if (!this._paused) {
       return;
     }
 
     waitUntilInitialized(this.isInitialized).then(() => {
-      this.paused = false;
+      this._paused = false;
       this._processLoop();
     });
   }
 
   pause() {
-    this.paused = true;
+    this._paused = true;
   }
 
   resume() {
@@ -57,8 +61,8 @@ class ConsumerUnit {
   async _ensureConsumerGroupExists() {
     try {
       // XGROUP CREATE mystream mygroup 0 MKSTREAM
-      console.log('Ensuring consumer group exists', { QNAME: this.QNAME, GRPNAME: this.GRPNAME });
-      await this.redis.xgroup('CREATE', this.QNAME, this.GRPNAME, 0, 'MKSTREAM');
+      console.log('Ensuring consumer group exists', { QNAME: this._QNAME, GRPNAME: this._GRPNAME });
+      await this._redis.xgroup('CREATE', this._QNAME, this._GRPNAME, 0, 'MKSTREAM');
     } catch (e) {
       // BUSYGROUP -> the consumer group is already present, ignore
       if (!(e instanceof ReplyError && e.message.includes('BUSYGROUP'))) {
@@ -70,15 +74,15 @@ class ConsumerUnit {
   async _initialize() {
     if (this.name) {
       // We already have a name? Reconnecting in this case
-      await this.redis.client('SETNAME', this.name);
+      await this._redis.client('SETNAME', this.name);
       return;
     }
 
-    await initScripts(this.redis);
+    await initScripts(this._redis);
 
-    const id = await this.redis.client('id');
-    this.name = `${this.GRPNAME}:c:${id}-${shortid.generate()}`;
-    await this.redis.client('SETNAME', this.name);
+    const id = await this._redis.client('id');
+    this.name = `${this._GRPNAME}:c:${id}-${shortid.generate()}`;
+    await this._redis.client('SETNAME', this.name);
 
     await this._ensureConsumerGroupExists();
 
@@ -88,30 +92,41 @@ class ConsumerUnit {
   async _getPendingTasks() {
     console.log('🔍', this.name, ' :: Checking pending tasks');
 
-    const taskObj = await this.redis.xreadgroup(
+    const taskObj = await this._redis.xreadgroup(
       'GROUP',
-      this.GRPNAME,
+      this._GRPNAME,
       this.name,
       'COUNT',
       this.consumerOptions.taskBufferSize,
       'STREAMS',
-      this.QNAME,
+      this._QNAME,
       '0'
     );
     const tasks = [].concat(...Object.values(taskObj));
 
-    console.dir({ taskObj, tasks, pendingTasks: this.pendingTasks }, { depth: null });
+    console.dir({ taskObj, tasks, pendingTasks: this._pendingTasks }, { depth: null });
 
     for (const t of tasks) {
       const task = new Task(t.id, t.data);
-      this.pendingTasks.push(task);
+      this._pendingTasks.push(task);
     }
   }
 
   async _waitForTask() {
-    console.log('📭 ', this.name, ` :: Waiting for tasks. Processed so far: ${this.totalTasks}`);
+    console.log('📭 ', this.name, ` :: Waiting for tasks. Processed so far: ${this._totalTasks}`);
 
-    await this.redis.xreadgroup('GROUP', this.GRPNAME, this.name, 'BLOCK', 0, 'COUNT', 1, 'STREAMS', this.QNAME, '>');
+    await this._redis.xreadgroup(
+      'GROUP',
+      this._GRPNAME,
+      this.name,
+      'BLOCK',
+      0,
+      'COUNT',
+      1,
+      'STREAMS',
+      this._QNAME,
+      '>'
+    );
 
     console.log('🔔 ', this.name, ' :: Got new task!');
   }
@@ -125,7 +140,7 @@ class ConsumerUnit {
       return _difference;
     }
 
-    const info = await this.redis.xinfo('CONSUMERS', this.QNAME, this.GRPNAME);
+    const info = await this._redis.xinfo('CONSUMERS', this._QNAME, this._GRPNAME);
     const consumerInfo = {};
     for (const inf of info) {
       const data = {};
@@ -150,7 +165,7 @@ class ConsumerUnit {
     }
     console.log({ pendingConsumerNames });
 
-    const clients = (await this.redis.client('LIST')).split('\n');
+    const clients = (await this._redis.client('LIST')).split('\n');
     const activeWorkers = new Set();
     for (const cli of clients) {
       cli.split(' ').map(v => {
@@ -169,12 +184,12 @@ class ConsumerUnit {
     const orphanEmptyWorkers = difference(emptyConsumerNames, activeWorkers);
 
     for (const w of orphanWorkers) {
-      const pendingTasks = await this.redis.xpending(this.QNAME, this.GRPNAME, '-', '+', 1000, w);
+      const pendingTasks = await this._redis.xpending(this._QNAME, this._GRPNAME, '-', '+', 1000, w);
       console.log({ pendingTasks });
       const ids = pendingTasks.map(t => t.id);
-      const claim = await this.redis.xclaim(
-        this.QNAME,
-        this.GRPNAME,
+      const claim = await this._redis.xclaim(
+        this._QNAME,
+        this._GRPNAME,
         this.name,
         this.consumerOptions.workerFnTimeoutMs * 2,
         ...ids,
@@ -184,34 +199,34 @@ class ConsumerUnit {
     }
 
     for (const w of orphanEmptyWorkers) {
-      await this.redis.delconsumer(this.QNAME, this.GRPNAME, w);
+      await this._redis.delconsumer(this._QNAME, this._GRPNAME, w);
       console.log(`🧹 ${this.name} :: Deleted old consumer ${w}`);
     }
   }
 
   async _processLoop() {
-    do {
+    while (!this._paused) {
       await this._cleanUp();
       await this._getPendingTasks();
 
-      if (!this.pendingTasks.length) {
+      if (!this._pendingTasks.length) {
         await this._waitForTask();
       }
 
-      while (this.pendingTasks.length && !this.paused) {
+      while (this._pendingTasks.length && !this._paused) {
         await this.processTask();
       }
-    } while (!this.paused);
+    }
   }
 
   async processTask() {
-    if (!this.pendingTasks.length) {
+    if (!this._pendingTasks.length) {
       return;
     }
 
-    const task = this.pendingTasks.shift();
+    const task = this._pendingTasks.shift();
     console.log(this.name, ' :: Staring to process task', task);
-    this.totalTasks++;
+    this._totalTasks++;
 
     const metadata = { id: task.id, qname: this.qname, retryCount: task.retryCount };
     try {
@@ -241,9 +256,9 @@ class ConsumerUnit {
     });
 
     // Add to success list
-    await this.redis
+    await this._redis
       .pipeline()
-      .dequeue(this.QNAME, this.DEDUPSET, this.GRPNAME, task.id, task.dedupKey) // Remove from queue
+      .dequeue(this._QNAME, this._DEDUPSET, this._GRPNAME, task.id, task.dedupKey) // Remove from queue
       .lpush(defaults.RESULTLIST, resultVal)
       .ltrim(defaults.RESULTLIST, 0, defaults.queueOptions.maxResultListSize - 1)
       .exec();
@@ -267,10 +282,10 @@ class ConsumerUnit {
     if (task.retryCount < this.consumerOptions.maxRetry) {
       task.incrRetry();
       // Send again to the queue
-      await this.redis.requeue(
-        this.QNAME,
-        this.DEDUPSET,
-        this.GRPNAME,
+      await this._redis.requeue(
+        this._QNAME,
+        this._DEDUPSET,
+        this._GRPNAME,
         task.id,
         task.dataString,
         task.dedupKey,
@@ -278,16 +293,16 @@ class ConsumerUnit {
       );
     } else {
       // Move to deadlist
-      await this.redis
+      await this._redis
         .pipeline()
-        .dequeue(this.QNAME, this.DEDUPSET, this.GRPNAME, task.id, task.dedupKey) // Remove from queue
+        .dequeue(this._QNAME, this._DEDUPSET, this._GRPNAME, task.id, task.dedupKey) // Remove from queue
         .lpush(defaults.DEADLIST, info)
         .ltrim(defaults.DEADLIST, 0, defaults.queueOptions.maxDeadListSize - 1)
         .exec();
     }
 
     // Add to failed list in all cases
-    await this.redis
+    await this._redis
       .pipeline()
       .lpush(defaults.FAILEDLIST, info)
       .ltrim(defaults.FAILEDLIST, 0, defaults.queueOptions.maxFailedListSize - 1)
@@ -309,7 +324,8 @@ class ConsumerUnit {
   }
 
   async _disconnect() {
-    await this.redis.disconnect();
+    this._paused = true;
+    await this._redis.disconnect();
   }
 }
 

@@ -1,10 +1,10 @@
 {
   "name": "orkid",
   "version": "0.0.0",
-  "description": "Task Scheduler",
+  "description": "Task Queue",
   "main": "index.js",
   "scripts": {
-    "test": "jest --runInBand"
+    "test": "NODE_ENV=test jest --runInBand"
   },
   "repository": {
     "type": "git",
@@ -19,7 +19,6 @@
   "dependencies": {
     "ioredis": "^4.5.1",
     "lodash": "^4.17.11",
-    "promise-callbacks": "^3.2.2",
     "shortid": "^2.2.14"
   },
   "devDependencies": {

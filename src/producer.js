@@ -12,20 +12,20 @@ const defaults = require('./defaults');
 class Producer {
   constructor(qname, { redisOptions, redisClient } = {}) {
     if (redisClient) {
-      this.redis = redisClient.duplicate();
+      this._redis = redisClient.duplicate();
     } else {
-      this.redisOptions = lodash.merge({}, defaults.redisOptions, redisOptions);
-      this.redis = new IORedis(this.redisOptions);
+      this._redisOptions = lodash.merge({}, defaults.redisOptions, redisOptions);
+      this._redis = new IORedis(this._redisOptions);
     }
 
-    this.QNAME = `${defaults.NAMESPACE}:queue:${qname}`;
-    this.DEDUPSET = `${defaults.NAMESPACE}:queue:${qname}:dedupset`;
+    this._QNAME = `${defaults.NAMESPACE}:queue:${qname}`;
+    this._DEDUPSET = `${defaults.NAMESPACE}:queue:${qname}:dedupset`;
 
     this._initialize();
   }
 
   async _initialize() {
-    await initScripts(this.redis);
+    await initScripts(this._redis);
 
     this.isInitialized = true;
   }
@@ -33,7 +33,7 @@ class Producer {
   async addTask(data, dedupKey) {
     await waitUntilInitialized(this.isInitialized);
 
-    const retval = await this.redis.enqueue(this.QNAME, this.DEDUPSET, JSON.stringify(data), dedupKey, 0);
+    const retval = await this._redis.enqueue(this._QNAME, this._DEDUPSET, JSON.stringify(data), dedupKey, 0);
     return retval;
   }
 
@@ -42,7 +42,7 @@ class Producer {
   }
 
   async _disconnect() {
-    await this.redis.disconnect();
+    await this._redis.disconnect();
   }
 }
 

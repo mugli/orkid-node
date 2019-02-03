@@ -1,16 +1,13 @@
 const Producer = require('../src/producer');
 const IORedis = require('ioredis');
 
-const { waitOn } = require('promise-callbacks');
-const { delay } = require('../src/common');
-
-// TODO: Since we are calling flushall,
-// ensure redis in test env can be used with a separate config
 describe('Producer', () => {
   let redis;
   let producer;
 
   beforeAll(async () => {
+    // TODO: Since we are calling flushall,
+    // ensure redis in test env can be used with a separate config
     redis = new IORedis();
   });
 
