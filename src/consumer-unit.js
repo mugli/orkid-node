@@ -6,7 +6,7 @@ const lodash = require('lodash');
 const shortid = require('shortid');
 
 const initScripts = require('./commands');
-const { delay } = require('./common');
+const { waitUntilInitialized } = require('./common');
 const Task = require('./task');
 const { ReplyError } = require('redis-errors');
 const { TimeoutError } = require('./errors');
@@ -32,14 +32,7 @@ class ConsumerUnit {
     this.loggingOptions = lodash.merge({}, defaults.loggingOptions, loggingOptions);
 
     this.redis = new IORedis(this.redisOptions);
-    this.initialize();
-  }
-
-  async waitUntilInitialized() {
-    // TODO: Replace this loop with an EventEmitter
-    while (!this.initialized) {
-      await delay(50);
-    }
+    this._initialize();
   }
 
   start() {
@@ -47,9 +40,9 @@ class ConsumerUnit {
       return;
     }
 
-    this.waitUntilInitialized().then(() => {
+    waitUntilInitialized(this.isInitialized).then(() => {
       this.paused = false;
-      this.processLoop();
+      this._processLoop();
     });
   }
 
@@ -61,7 +54,7 @@ class ConsumerUnit {
     this.start();
   }
 
-  async ensureConsumerGroupExists() {
+  async _ensureConsumerGroupExists() {
     try {
       // XGROUP CREATE mystream mygroup 0 MKSTREAM
       console.log('Ensuring consumer group exists', { QNAME: this.QNAME, GRPNAME: this.GRPNAME });
@@ -74,7 +67,7 @@ class ConsumerUnit {
     }
   }
 
-  async initialize() {
+  async _initialize() {
     if (this.name) {
       // We already have a name? Reconnecting in this case
       await this.redis.client('SETNAME', this.name);
@@ -87,12 +80,12 @@ class ConsumerUnit {
     this.name = `${this.GRPNAME}:c:${id}-${shortid.generate()}`;
     await this.redis.client('SETNAME', this.name);
 
-    await this.ensureConsumerGroupExists();
+    await this._ensureConsumerGroupExists();
 
-    this.initialized = true;
+    this.isInitialized = true;
   }
 
-  async getPendingTasks() {
+  async _getPendingTasks() {
     console.log('🔍', this.name, ' :: Checking pending tasks');
 
     const taskObj = await this.redis.xreadgroup(
@@ -115,7 +108,7 @@ class ConsumerUnit {
     }
   }
 
-  async waitForTask() {
+  async _waitForTask() {
     console.log('📭 ', this.name, ` :: Waiting for tasks. Processed so far: ${this.totalTasks}`);
 
     await this.redis.xreadgroup('GROUP', this.GRPNAME, this.name, 'BLOCK', 0, 'COUNT', 1, 'STREAMS', this.QNAME, '>');
@@ -123,7 +116,7 @@ class ConsumerUnit {
     console.log('🔔 ', this.name, ' :: Got new task!');
   }
 
-  async cleanUp() {
+  async _cleanUp() {
     function difference(setA, setB) {
       var _difference = new Set(setA);
       for (var elem of setB) {
@@ -196,13 +189,13 @@ class ConsumerUnit {
     }
   }
 
-  async processLoop() {
+  async _processLoop() {
     do {
-      await this.cleanUp();
-      await this.getPendingTasks();
+      await this._cleanUp();
+      await this._getPendingTasks();
 
       if (!this.pendingTasks.length) {
-        await this.waitForTask();
+        await this._waitForTask();
       }
 
       while (this.pendingTasks.length && !this.paused) {
@@ -222,8 +215,8 @@ class ConsumerUnit {
 
     const metadata = { id: task.id, qname: this.qname, retryCount: task.retryCount };
     try {
-      const result = await this.wrapWorkerFn(task.dataObj, metadata);
-      await this.processSuccess(task, result);
+      const result = await this._wrapWorkerFn(task.dataObj, metadata);
+      await this._processSuccess(task, result);
     } catch (e) {
       if (e instanceof TimeoutError) {
         console.log('⏰ ', this.name, `:: Worker ${task.id} timed out`, e);
@@ -231,11 +224,11 @@ class ConsumerUnit {
         console.log('💣 ', this.name, ` :: Worker ${task.id} crashed`, e);
       }
 
-      await this.processFailure(task, e);
+      await this._processFailure(task, e);
     }
   }
 
-  async processSuccess(task, result) {
+  async _processSuccess(task, result) {
     console.log('✅ ', this.name, ` :: DONE!! Worker ${task.id} done working`, result);
 
     const resultVal = JSON.stringify({
@@ -256,7 +249,7 @@ class ConsumerUnit {
       .exec();
   }
 
-  async processFailure(task, error) {
+  async _processFailure(task, error) {
     const info = JSON.stringify({
       id: task.id,
       qname: this.qname,
@@ -301,7 +294,7 @@ class ConsumerUnit {
       .exec();
   }
 
-  wrapWorkerFn(data, metadata) {
+  _wrapWorkerFn(data, metadata) {
     const timeoutMs = this.consumerOptions.workerFnTimeoutMs;
     const timeoutP = new Promise((resolve, reject) => {
       const to = setTimeout(() => {
@@ -313,6 +306,10 @@ class ConsumerUnit {
     const workerP = this.workerFn(data, metadata);
 
     return Promise.race([timeoutP, workerP]);
+  }
+
+  async _disconnect() {
+    await this.redis.disconnect();
   }
 }
 

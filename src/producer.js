@@ -5,7 +5,7 @@ const IORedis = require('ioredis');
 const lodash = require('lodash');
 
 const initScripts = require('./commands');
-const { delay } = require('./common');
+const { waitUntilInitialized } = require('./common');
 
 const defaults = require('./defaults');
 
@@ -24,22 +24,14 @@ class Producer {
     this._initialize();
   }
 
-  async _waitUntilInitialized() {
-    // TODO: Replace loop with an EventEmitter
-    while (!this.initialized) {
-      // console.log('Looping...');
-      await delay(50);
-    }
-  }
-
   async _initialize() {
     await initScripts(this.redis);
 
-    this.initialized = true;
+    this.isInitialized = true;
   }
 
   async addTask(data, dedupKey) {
-    await this._waitUntilInitialized();
+    await waitUntilInitialized(this.isInitialized);
 
     const retval = await this.redis.enqueue(this.QNAME, this.DEDUPSET, JSON.stringify(data), dedupKey, 0);
     return retval;
