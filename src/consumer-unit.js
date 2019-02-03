@@ -32,10 +32,11 @@ class ConsumerUnit {
     this.loggingOptions = lodash.merge({}, defaults.loggingOptions, loggingOptions);
 
     this.redis = new IORedis(this.redisOptions);
-    this.redis.on('connect', this.initialize.bind(this));
+    this.initialize();
   }
 
   async waitUntilInitialized() {
+    // TODO: Replace this loop with an EventEmitter
     while (!this.initialized) {
       await delay(50);
     }
@@ -81,7 +82,7 @@ class ConsumerUnit {
     }
 
     await initScripts(this.redis);
-    await delay(100); // Not sure if needed here. Does ioredis.defineCommand return a promise?
+
     const id = await this.redis.client('id');
     this.name = `${this.GRPNAME}:c:${id}-${shortid.generate()}`;
     await this.redis.client('SETNAME', this.name);

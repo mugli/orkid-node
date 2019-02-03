@@ -4,7 +4,7 @@
   "description": "Task Scheduler",
   "main": "index.js",
   "scripts": {
-    "test": "jest"
+    "test": "jest --runInBand"
   },
   "repository": {
     "type": "git",
@@ -19,6 +19,7 @@
   "dependencies": {
     "ioredis": "^4.5.1",
     "lodash": "^4.17.11",
+    "promise-callbacks": "^3.2.2",
     "shortid": "^2.2.14"
   },
   "devDependencies": {

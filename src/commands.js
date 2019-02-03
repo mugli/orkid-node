@@ -1,4 +1,4 @@
-async function initScripts(redis) {
+function initScripts(redis) {
   const pArr = [];
 
   pArr.push(
@@ -146,7 +146,7 @@ async function initScripts(redis) {
     })
   );
 
-  await Promise.all(pArr);
+  return Promise.all(pArr);
 }
 
 module.exports = initScripts;

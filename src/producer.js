@@ -10,25 +10,31 @@ const { delay } = require('./common');
 const defaults = require('./defaults');
 
 class Producer {
-  constructor(qname, { redisOptions } = {}) {
-    this.redisOptions = lodash.merge({}, defaults.redisOptions, redisOptions);
-    this.redis = new IORedis(this.redisOptions);
+  constructor(qname, { redisOptions, redisClient } = {}) {
+    if (redisClient) {
+      this.redis = redisClient;
+    } else {
+      this.redisOptions = lodash.merge({}, defaults.redisOptions, redisOptions);
+      this.redis = new IORedis(this.redisOptions);
+    }
 
     this.QNAME = `${defaults.NAMESPACE}:queue:${qname}`;
     this.DEDUPSET = `${defaults.NAMESPACE}:queue:${qname}:dedupset`;
 
-    this.redis.on('connect', this.initialize.bind(this));
+    // this.redis.on('ready', this.initialize.bind(this));
+    this.initialize();
   }
 
   async waitUntilInitialized() {
+    // TODO: Replace loop with an EventEmitter
     while (!this.initialized) {
+      // console.log('Looping...');
       await delay(50);
     }
   }
 
   async initialize() {
     await initScripts(this.redis);
-    await delay(50); // Not sure if needed here. Does ioredis.defineCommand return a promise?
 
     this.initialized = true;
   }
@@ -39,7 +45,7 @@ class Producer {
     return await this.redis.enqueue(this.QNAME, this.DEDUPSET, JSON.stringify(data), dedupKey, 0);
   }
 
-  addRepeatedTask(cron, producerFn) {
+  addCron(cron, producerFn) {
     // TODO: Implement
   }
 }
