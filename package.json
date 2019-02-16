@@ -1,8 +1,8 @@
 {
   "name": "orkid",
   "version": "0.0.0",
-  "description": "Task Queue",
-  "main": "index.js",
+  "description": "Reliable and modern Redis-streams based task queue for Node.js",
+  "main": "./src/index.js",
   "scripts": {
     "test": "NODE_ENV=test jest --runInBand"
   },
@@ -14,6 +14,9 @@
   "license": "MIT",
   "bugs": {
     "url": "https://github.com/mugli/orkid/issues"
+  },
+  "engines": {
+    "node": ">=10.0.0"
   },
   "homepage": "https://github.com/mugli/orkid#readme",
   "dependencies": {

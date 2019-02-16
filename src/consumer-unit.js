@@ -47,6 +47,8 @@ class ConsumerUnit {
   }
 
   pause() {
+    // TODO: Update globally `${orkidDefaults.NAMESPACE}:queue:${this.qname}:settings`
+    // Also inform other queues via pub/sub
     this._paused = true;
   }
 
@@ -232,6 +234,9 @@ class ConsumerUnit {
     console.log(this._name, ' :: Staring to process task', task);
     this._totalTasks++;
 
+    // TODO: Update queue specific total processed stat
+    await this._redis.hincrby(defaults.STAT, 'processed', 1);
+
     const metadata = { id: task.id, qname: this.qname, retryCount: task.retryCount };
     try {
       const result = await this._wrapWorkerFn(task.dataObj, metadata);
@@ -287,15 +292,12 @@ class ConsumerUnit {
     if (task.retryCount < this.consumerOptions.maxRetry) {
       task.incrRetry();
       // Send again to the queue
-      await this._redis.requeue(
-        this._QNAME,
-        this._DEDUPSET,
-        this._GRPNAME,
-        task.id,
-        task.dataString,
-        task.dedupKey,
-        task.retryCount
-      );
+      await this._redis
+        .pipeline()
+        .requeue(this._QNAME, this._DEDUPSET, this._GRPNAME, task.id, task.dataString, task.dedupKey, task.retryCount)
+        .hincrby(defaults.STAT, 'retries', 1)
+        .exec();
+      // TODO: Update queue specific total retries stat
     } else {
       // Move to deadlist
       await this._redis
@@ -303,7 +305,9 @@ class ConsumerUnit {
         .dequeue(this._QNAME, this._DEDUPSET, this._GRPNAME, task.id, task.dedupKey) // Remove from queue
         .lpush(defaults.DEADLIST, info)
         .ltrim(defaults.DEADLIST, 0, defaults.queueOptions.maxDeadListSize - 1)
+        .hincrby(defaults.STAT, 'dead', 1)
         .exec();
+      // TODO: Update queue specific total dead stat
     }
 
     // Add to failed list in all cases
@@ -311,7 +315,9 @@ class ConsumerUnit {
       .pipeline()
       .lpush(defaults.FAILEDLIST, info)
       .ltrim(defaults.FAILEDLIST, 0, defaults.queueOptions.maxFailedListSize - 1)
+      .hincrby(defaults.STAT, 'failed', 1)
       .exec();
+    // TODO: Update queue specific total failed stat
   }
 
   _wrapWorkerFn(data, metadata) {

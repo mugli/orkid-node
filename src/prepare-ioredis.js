@@ -1,3 +1,9 @@
+/**
+ * Borrowed from: https://github.com/vflopes/warship/blob/master/lib/prepare-ioredis.js
+ * Original author: https://github.com/vflopes
+ * Original License: MIT
+ */
+
 const IORedis = require('ioredis');
 
 const parseObjectResponse = (reply, customParser = null) => {
