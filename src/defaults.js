@@ -3,6 +3,7 @@ module.exports = {
   RESULTLIST: 'orkid:internals:results',
   FAILEDLIST: 'orkid:internals:failed',
   DEADLIST: 'orkid:internals:dead',
+  QUENAMES: 'orkid:internals:qnames',
   redisOptions: {},
   producerOptions: {
     deduplicate: false

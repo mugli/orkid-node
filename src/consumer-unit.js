@@ -18,7 +18,6 @@ class ConsumerUnit {
     this._paused = true;
 
     this._QNAME = `${defaults.NAMESPACE}:queue:${qname}`;
-    this._RETRYQNAME = `${defaults.NAMESPACE}:queue:${qname}:retry`;
     this._DEDUPSET = `${defaults.NAMESPACE}:queue:${qname}:dedupset`;
     this.qname = qname;
     this._GRPNAME = `${defaults.NAMESPACE}:queue:${qname}:cg`;
@@ -255,6 +254,7 @@ class ConsumerUnit {
       id: task.id,
       qname: this.qname,
       data: task.dataObj,
+      dedupKey: task.dedupKey,
       retryCount: task.retryCount,
       result,
       at: new Date().toISOString()

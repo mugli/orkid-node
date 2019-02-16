@@ -1,3 +1,5 @@
+const { QUENAMES } = require('./defaults');
+
 function initScripts(redis) {
   const pArr = [];
 
@@ -25,6 +27,9 @@ function initScripts(redis) {
       local retryCount = ARGV[4]
 
       local retval
+
+      redis.call("SADD", "${QUENAMES}", QNAME)
+
       if dedupKey == nil or dedupKey == '' then
         retval = redis.call("XADD", QNAME, "*", "data", data, "dedupKey", dedupKey, "retryCount", retryCount)
       else
@@ -64,6 +69,9 @@ function initScripts(redis) {
       local retryCount = ARGV[3]
 
       local retval
+
+      redis.call("SADD", "${QUENAMES}", QNAME)
+
       if dedupKey == nil or dedupKey == '' then
         retval = redis.call("XADD", QNAME, "*", "data", data, "dedupKey", dedupKey, "retryCount", retryCount)
       else
