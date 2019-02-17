@@ -35,12 +35,13 @@ Reliable and modern [Redis-streams](https://redis.io/topics/streams-intro) based
 # Features
 
 - [x] Orkid let Redis do the heavy lifting with [redis streams](https://redis.io/topics/streams-intro).
-- [x] Adjustable concurrency per consumer instance.
-- [x] Job timeouts and retries. All configurable per consumer.
-- [x] Task Deduplication. If a task is already waiting in the queue, it can be configured to avoid queueing the same task again. _(Useful for operations like posting database record updates to elasticsearch for re-indexing, for avoiding unnecessary updates)_
-- [ ] Monitoring and management UI for better visibility.
-- [ ] Cron-like scheduled job producing. This is different than queueing task now and executing it later. Instead the producer function will be called later at a particular time to produce task. If multiple instances of the application is running, Orkid will ensure that only one producer function gets called.
-- [ ] Rate-limiting workers.
+- [x] Uses [`luin/ioredis`](https://github.com/luin/ioredis) for connection, so supports redis single instance, redis cluster, redis sentinel.
+- [x] **Adjustable concurrency** per consumer instance. See example code. [See example code](https://github.com/mugli/orkid-node/tree/master/examples/basic).
+- [x] Job **timeouts** and **retries**. All configurable per consumer. [See example code](https://github.com/mugli/orkid-node/tree/master/examples/failure-timeout-retry).
+- [x] Task **Deduplication**. If a task is already waiting in the queue, it can be configured to avoid queueing the same task again. _(Useful for operations like posting database record updates to elasticsearch for re-indexing. Deduplication is a common pattern here to avoid unnecessary updates)_. [See example code](https://github.com/mugli/orkid-node/tree/master/examples/deduplication).
+- [ ] Monitoring and management **UI** for better visibility.
+- [ ] Cron-like **scheduled job** producing. This is different than queueing task now and executing it later. Instead the producer function will be called later at a particular time to produce task. If multiple instances of the application is running, Orkid will ensure that only one producer function gets called.
+- [ ] **Rate-limiting** workers.
 
 # Requirements
 
@@ -141,7 +142,28 @@ consumer.start();
 <p></p>
 
 <details>
-  <summary>How to ensure durability in Redis?</summary>
+  <summary>Why Redis streams and not list/sorted-set/pub-sub etc?</summary>
+  [TODO: ]
+</details>
+
+<p></p>
+
+<details>
+  <summary>What delivery guarantee does Redis streams provide (`at-least once`/`best-effort`/`exactly-once`)?</summary>
+  [TODO: ]
+</details>
+
+<p></p>
+
+<details>
+  <summary>How do I ensure durability/persistence in Redis?</summary>
+  [TODO: ]
+</details>
+
+<p></p>
+
+<details>
+  <summary>How do I ensure high availability in Redis?</summary>
   [TODO: ]
 </details>
 
