@@ -14,7 +14,7 @@ Reliable and modern [Redis-streams](https://redis.io/topics/streams-intro) based
 
 # Table of Contents
 
-- [Why a new job/task queue for Node.js](#why-a-new-job-task-queue-for-nodejs)
+- [Why another job queue for Node.js](#why-a-new-job-queue-for-nodejs)
 - [Features](#features)
 - [Requirements](#requirements)
 - [Install](#install)
@@ -22,20 +22,17 @@ Reliable and modern [Redis-streams](https://redis.io/topics/streams-intro) based
 - [Monitoring and Management UI/Admin Panel](#monitoring-and-management-ui-admin-panel)
 - [FAQ](#faq)
 
-# Why a new job/task queue for Node.js
+# Why a new job queue for Node.js
 
-- The existing solutions are not very promising. [`Automattic/kue`](https://github.com/Automattic/kue) was very popular once, but apperantly [became unmaintained](https://github.com/Automattic/kue/issues/1196). We were happy with [`OptimalBits/bull`](https://github.com/OptimalBits/bull) until one day we were caught by a documentation bug ([related to this one](https://github.com/OptimalBits/bull/issues/742)) resulting in lots of duplicate SMS/emails and unhappy customers, eroding our trust in the queue.
+- All the redis-based solutions were created before [Redis-streams](https://redis.io/topics/streams-intro) became available. They all require a lot of work on the queue-side to ensure durability and atomicity of jobs. Redis streams was specifically designed to made this kind of tasks easier, thus allows simpler core in the queue and more reliable operations.
 
-- All the redis-based solutions (till the release of Orkid) were created before [Redis-streams](https://redis.io/topics/streams-intro) was available. They all require a lot of tasks on the queue-side to ensure durability and atomicity of jobs. Redis streams was specifically designed to made this kind of tasks easier, thus allows simpler core in the queue and more reliable operations.
+- None of existing usable job queues in Node.js offers a monitoring option that we liked.
 
-- None of existing job queues in Node.js offers a _mature_ and _production-ready_ monitoring UI. Other ecosystems had them for years. Orkid takes observability seriously.
-
-- None of the existing task queues support task deduplication, that we needed.
+- None of the existing usable task queues support task deduplication.
 
 # Features
 
-- [x] Orkid let Redis do the heavy lifting with [redis streams](https://redis.io/topics/streams-intro).
-- [x] Uses [`luin/ioredis`](https://github.com/luin/ioredis) for connection, so supports redis single instance, redis cluster, redis sentinel.
+- [x] Orkid lets Redis do the heavy lifting with [redis streams](https://redis.io/topics/streams-intro).
 - [x] **Adjustable concurrency** per consumer instance for scaling task processing. See example code. [See example code](https://github.com/mugli/orkid-node/tree/master/examples/basic).
 - [x] Job **timeouts** and **retries**. All configurable per consumer. [See example code](https://github.com/mugli/orkid-node/tree/master/examples/failure-timeout-retry).
 - [x] Task **Deduplication**. If a task is already waiting in the queue, it can be configured to avoid queueing the same task again. _(Useful for operations like posting database record updates to elasticsearch for re-indexing. Deduplication is a common pattern here to avoid unnecessary updates)_. [See example code](https://github.com/mugli/orkid-node/tree/master/examples/deduplication).
@@ -122,57 +119,27 @@ consumer.start();
 
 <details>
   <summary>Is this production ready?</summary>
-  Nope! Not yet :)
+  Not yet.
 </details>
 
 <p></p>
 
 <details>
   <summary>How do I set priority in the tasks?</summary>
-  [TODO: ]
+  Redis Streams isn't a suitable primitive to make a priority queue efficiently on top of it. Orkid doesn't support priority queues now and probably never will.
+
+However, as a workaround, you can create a separate queue, keep its workload minimal and use it for high priority jobs with Orkid.
+
 </details>
 
 <p></p>
 
 <details>
-  <summary>Why Redis and not 'X'?</summary>
-  [TODO: ]
+  <summary>What is the order of job/task delivery?</summary>
+  Jobs are processed in the order they are produced. However, if retry option is turned on and is applicable, failed jobs gets enqueued to the queue at once, along with other newly produced jobs. 
 </details>
 
 <p></p>
-
-<details>
-  <summary>Why Redis streams and not list/sorted-set/pub-sub etc?</summary>
-  [TODO: ]
-</details>
-
-<p></p>
-
-<details>
-  <summary>What delivery guarantee does Redis streams provide (`at-least once`/`best-effort`/`exactly-once`)?</summary>
-  [TODO: ]
-</details>
-
-<p></p>
-
-<details>
-  <summary>What is the order of job/task/delivery?</summary>
-  [TODO: ]
-</details>
-
-<p></p>
-
-<details>
-  <summary>How do I ensure durability/persistence in Redis?</summary>
-  [TODO: ]
-</details>
-
-<p></p>
-
-<details>
-  <summary>How do I ensure high availability in Redis?</summary>
-  [TODO: ]
-</details>
 
 ## Authors
 
