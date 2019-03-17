@@ -19,7 +19,6 @@ describe('Consumer Unit', () => {
   beforeEach(async () => {
     await redis.flushall();
     producer = new Producer('test-queue', { redisClient: redis });
-    consumer = new ConsumerUnit('test-queue', { redisClient: redis });
   });
 
   afterEach(async () => {
@@ -27,7 +26,17 @@ describe('Consumer Unit', () => {
     await consumer._disconnect();
   });
 
-  test('should process task', async () => {
-    // TODO: Implement
+  test('should process task', async done => {
+    const id = await producer.addTask('test');
+
+    function workerFn(data, metadata) {
+      expect(data).toBe('test');
+      expect(metadata).toEqual({ id, qname: 'test-queue', retryCount: 0 });
+
+      done();
+    }
+
+    consumer = new ConsumerUnit('test-queue', workerFn, { redisClient: redis });
+    consumer.start();
   });
 });

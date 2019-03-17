@@ -218,14 +218,14 @@ class ConsumerUnit {
       }
 
       while (this._pendingTasks.length && !this._paused) {
-        await this.processTask();
+        await this._processTask();
       }
     }
 
     this._loopStarted = false;
   }
 
-  async processTask() {
+  async _processTask() {
     if (!this._pendingTasks.length) {
       return;
     }
