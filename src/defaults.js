@@ -22,7 +22,7 @@ module.exports = {
     concurrencyPerInstance: 1
   },
   loggingOptions: {
-    enabled: true,
+    enabled: false,
     loggerFn: console.log
   }
 };

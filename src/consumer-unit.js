@@ -56,10 +56,16 @@ class ConsumerUnit {
     this.start();
   }
 
+  _log(...msg) {
+    if (this.loggingOptions.enabled) {
+      this.loggingOptions.loggerFn(`Orkid :: ${this._name}`, ...msg);
+    }
+  }
+
   async _ensureConsumerGroupExists() {
     try {
       // XGROUP CREATE mystream mygroup 0 MKSTREAM
-      console.log('Ensuring consumer group exists', { QNAME: this._QNAME, GRPNAME: this._GRPNAME });
+      this._log('Ensuring consumer group exists', { QNAME: this._QNAME, GRPNAME: this._GRPNAME });
       await this._redis.xgroup('CREATE', this._QNAME, this._GRPNAME, 0, 'MKSTREAM');
     } catch (e) {
       // BUSYGROUP -> the consumer group is already present, ignore
@@ -88,7 +94,7 @@ class ConsumerUnit {
   }
 
   async _getPendingTasks() {
-    console.log('🔍', this._name, ' :: Checking pending tasks');
+    this._log('Checking pending tasks');
 
     const taskObj = await this._redis.xreadgroup(
       'GROUP',
@@ -102,8 +108,6 @@ class ConsumerUnit {
     );
     const tasks = [].concat(...Object.values(taskObj));
 
-    console.dir({ taskObj, tasks, pendingTasks: this._pendingTasks }, { depth: null });
-
     for (const t of tasks) {
       const task = new Task(t.id, t.data);
       this._pendingTasks.push(task);
@@ -111,7 +115,7 @@ class ConsumerUnit {
   }
 
   async _waitForTask() {
-    console.log('📭 ', this._name, ` :: Waiting for tasks. Processed so far: ${this._totalTasks}`);
+    this._log(`Waiting for tasks. Processed so far: ${this._totalTasks}`);
 
     await this._redis.xreadgroup(
       'GROUP',
@@ -126,7 +130,7 @@ class ConsumerUnit {
       '>'
     );
 
-    console.log('🔔 ', this._name, ' :: Got new task!');
+    this._log('Got new task');
   }
 
   async _cleanUp() {
@@ -147,7 +151,7 @@ class ConsumerUnit {
       }
       consumerInfo[inf[1]] = data;
     }
-    console.dir({ consumerInfo }, { depth: null });
+
     const consumerNames = Object.keys(consumerInfo);
     const pendingConsumerNames = new Set();
     const emptyConsumerNames = new Set();
@@ -161,7 +165,6 @@ class ConsumerUnit {
         }
       }
     }
-    console.log({ pendingConsumerNames });
 
     const clients = (await this._redis.client('LIST')).split('\n');
     const activeWorkers = new Set();
@@ -176,14 +179,12 @@ class ConsumerUnit {
       });
     }
 
-    console.log({ clients, activeWorkers });
-
     const orphanWorkers = difference(pendingConsumerNames, activeWorkers);
     const orphanEmptyWorkers = difference(emptyConsumerNames, activeWorkers);
 
     for (const w of orphanWorkers) {
       const pendingTasks = await this._redis.xpending(this._QNAME, this._GRPNAME, '-', '+', 1000, w);
-      console.log({ pendingTasks });
+
       const ids = pendingTasks.map(t => t.id);
       const claim = await this._redis.xclaim(
         this._QNAME,
@@ -193,12 +194,12 @@ class ConsumerUnit {
         ...ids,
         'JUSTID'
       );
-      console.log(`🤝 ${this._name} :: Claimed ${claim.length} pending tasks from worker ${w}`);
+      this._log(`Claimed ${claim.length} pending tasks from worker ${w}`);
     }
 
     for (const w of orphanEmptyWorkers) {
       await this._redis.delconsumer(this._QNAME, this._GRPNAME, w);
-      console.log(`🧹 ${this._name} :: Deleted old consumer ${w}`);
+      this._log(`Deleted old consumer ${w}`);
     }
   }
 
@@ -231,7 +232,7 @@ class ConsumerUnit {
     }
 
     const task = this._pendingTasks.shift();
-    console.log(this._name, ' :: Staring to process task', task);
+    this._log('Staring to process task', task);
     this._totalTasks++;
 
     // TODO: Update queue specific total processed stat
@@ -243,9 +244,9 @@ class ConsumerUnit {
       await this._processSuccess(task, result);
     } catch (e) {
       if (e instanceof TimeoutError) {
-        console.log('⏰ ', this._name, `:: Worker ${task.id} timed out`, e);
+        this._log(`Worker ${task.id} timed out`, e);
       } else {
-        console.log('💣 ', this._name, ` :: Worker ${task.id} crashed`, e);
+        this._log(`Worker ${task.id} crashed`, e);
       }
 
       await this._processFailure(task, e);
@@ -253,7 +254,7 @@ class ConsumerUnit {
   }
 
   async _processSuccess(task, result) {
-    console.log('✅ ', this._name, ` :: DONE!! Worker ${task.id} done working`, result);
+    this._log(`Worker ${task.id} returned`, result);
 
     const resultVal = JSON.stringify({
       id: task.id,
