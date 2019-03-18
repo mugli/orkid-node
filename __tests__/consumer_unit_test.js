@@ -10,19 +10,19 @@ describe('Consumer Unit', () => {
     // TODO: Since we are calling flushall,
     // ensure redis in test env can be used with a separate config
     redis = new IORedis();
+    producer = new Producer('test-queue', { redisClient: redis });
   });
 
-  afterAll(() => {
+  afterAll(async () => {
     redis.disconnect();
+    await producer._disconnect();
   });
 
   beforeEach(async () => {
     await redis.flushall();
-    producer = new Producer('test-queue', { redisClient: redis });
   });
 
   afterEach(async () => {
-    await producer._disconnect();
     await consumer._disconnect();
   });
 
@@ -38,5 +38,25 @@ describe('Consumer Unit', () => {
 
     consumer = new ConsumerUnit('test-queue', workerFn, { redisClient: redis });
     consumer.start();
+  });
+
+  test('should retry task on error', async () => {
+    // TODO: Implement
+  });
+
+  test('should retry task on timeout', async () => {
+    // TODO: Implement
+  });
+
+  test('should add to result list on success', async () => {
+    // TODO: Implement
+  });
+
+  test('should add to failed list on failure', async () => {
+    // TODO: Implement
+  });
+
+  test('should add to dead list after failure on all retries', async () => {
+    // TODO: Implement
   });
 });
