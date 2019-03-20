@@ -10,7 +10,7 @@ Reliable and modern [Redis-streams](https://redis.io/topics/streams-intro) based
 
 # Screenshot
 
-[TODO: ]
+![screenshot](https://raw.githubusercontent.com/mugli/orkid-node/master/screenshot.png)
 
 # Table of Contents
 
@@ -109,7 +109,10 @@ consumer.start();
 
 # Monitoring and Management UI/Admin Panel
 
-[TODO: ]
+![screenshot](https://raw.githubusercontent.com/mugli/orkid-node/master/screenshot.png)
+![screenshot](https://raw.githubusercontent.com/mugli/orkid-node/master/screenshot-2.png)
+
+[TODO: Description]
 
 # Task/job lifecycle
 
