@@ -146,7 +146,7 @@ However, as a workaround, you can create a separate queue, keep its workload min
 
 ## Authors
 
-- Mehdi Hasan Khan (Twitter: [@MehdiHK](https://twitter.com/MehdiHK))
+- Mehdi Hasan Khan ([@MehdiHK](https://twitter.com/MehdiHK))
 
 ## License
 
