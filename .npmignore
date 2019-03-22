@@ -26,6 +26,7 @@ build/Release
 __tests__/
 .circleci/
 screenshot*
+orkid.svg
 CODE_OF_CONDUCT.md
 jest.config.js
 

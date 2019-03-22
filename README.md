@@ -1,4 +1,6 @@
-# orkid
+<h1 align="center">
+<img src="orkid.svg" width="150px" height="150px" /><br />
+orkid</h1>
 
 [![NPM version](https://img.shields.io/npm/v/orkid.svg)](https://www.npmjs.com/package/orkid)
 ![](https://img.shields.io/david/mugli/orkid.svg?style=flat)
