@@ -146,10 +146,17 @@ However, as a workaround, you can create a separate queue, keep its workload min
 
 <p></p>
 
-## Authors
+## Author
 
 - Mehdi Hasan Khan ([@MehdiHK](https://twitter.com/MehdiHK))
 
 ## License
 
 MIT
+
+---
+
+### Related Projects
+
+- [orkid-api](https://github.com/mugli/orkid-api): GraphQL API to monitor and manage Orkid task queue
+- [orkid-ui](https://github.com/mugli/orkid-ui): Dashboard to monitor and manage Orkid task queue
