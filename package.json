@@ -4,7 +4,7 @@
   "description": "Reliable and modern Redis-streams based task queue for Node.js",
   "main": "./src/index.js",
   "scripts": {
-    "test": "NODE_ENV=test jest --runInBand --forceExit --detectOpenHandles",
+    "test": "NODE_ENV=test jest --colors --coverage --runInBand --forceExit --detectOpenHandles",
     "lint": "eslint --quiet .",
     "prettier": "prettier --write ./**/*.js"
   },
@@ -28,6 +28,7 @@
     "shortid": "^2.2.14"
   },
   "devDependencies": {
+    "@types/jest": "^24.0.13",
     "eslint": "^5.16.0",
     "eslint-config-airbnb-base": "^13.1.0",
     "eslint-config-prettier": "^4.3.0",
