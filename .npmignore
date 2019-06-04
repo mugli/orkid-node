@@ -29,4 +29,8 @@ screenshot*
 orkid.svg
 CODE_OF_CONDUCT.md
 jest.config.js
-
+jest.customsequencer.js
+.eslintrc.js
+.prettierignore
+.prettierrc.json
+package-lock.json
