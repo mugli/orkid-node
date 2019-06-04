@@ -14,6 +14,8 @@ const { TimeoutError } = require('./errors');
 
 const defaults = require('./defaults');
 
+// TODO: Write unit test once ioredis has necessary support for redis-stream
+
 class ConsumerUnit {
   constructor(qname, workerFn, { consumerOptions, redisOptions, redisClient, loggingOptions } = {}) {
     this._paused = true;

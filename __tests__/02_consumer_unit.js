@@ -49,6 +49,27 @@ describe('Consumer Unit', () => {
     consumer.start();
   });
 
+  test('should process task with complex data/arg', async done => {
+    const taskData = { name: `test-${shortid.generate()}`, nested: { arr: [1, 2, 3], nested: { arr: [1, 2, 3] } } };
+
+    const qname = `queue-${shortid.generate()}`;
+    const producer = new Producer(qname, { redisClient: redis });
+    producers.push(producer);
+
+    const id = await producer.addTask(taskData);
+
+    async function workerFn(data, metadata) {
+      expect(data).toEqual(taskData);
+      expect(metadata).toEqual({ id, qname, retryCount: 0 });
+
+      done();
+    }
+
+    const consumer = new ConsumerUnit(qname, workerFn, { redisClient: redis });
+    consumers.push(consumer);
+    consumer.start();
+  });
+
   test('should retry task on error', async done => {
     const taskData = `test-${shortid.generate()}`;
 
