@@ -20,12 +20,12 @@
   },
   "homepage": "https://github.com/mugli/orkid#readme",
   "dependencies": {
-    "ioredis": "^4.6.2",
+    "ioredis": "^4.9.5",
     "lodash": "^4.17.11",
     "orkid-ui": "^0.3.0",
     "shortid": "^2.2.14"
   },
   "devDependencies": {
-    "jest": "^24.5.0"
+    "jest": "^24.8.0"
   }
 }
