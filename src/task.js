@@ -1,10 +1,41 @@
+const Joi = require('@hapi/joi');
+
+const schema = Joi.object().keys({
+  data: Joi.string()
+    .required()
+    .allow(''),
+  dedupKey: Joi.string()
+    .required()
+    .allow(''),
+  retryCount: Joi.number()
+    .integer()
+    .min(0)
+    .required()
+});
+
+const validationOptions = {
+  abortEarly: true,
+  convert: true,
+  allowUnknown: false
+};
+
 class Task {
   constructor(id, rawData) {
+    if (!id) {
+      throw new Error('Task requires an ID');
+    }
+
+    const { value, error } = Joi.validate(rawData, schema, validationOptions);
+
+    if (error) {
+      throw new Error(`Invalid rawData for task: ${error}`);
+    }
+
     this.id = id;
-    this.dataString = rawData.data;
-    this.dataObj = JSON.parse(rawData.data);
-    this.dedupKey = rawData.dedupKey;
-    this.retryCount = JSON.parse(rawData.retryCount || 0);
+    this.dataString = value.data;
+    this.dataObj = JSON.parse(value.data);
+    this.dedupKey = value.dedupKey;
+    this.retryCount = value.retryCount;
   }
 
   incrRetry() {
