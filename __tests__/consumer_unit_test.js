@@ -1,10 +1,11 @@
+const IORedis = require('ioredis');
 const Producer = require('../src/producer');
 const ConsumerUnit = require('../src/consumer-unit');
-const IORedis = require('ioredis');
 
 describe.skip('Consumer Unit', () => {
   let redis;
-  let producer, consumer;
+  let producer;
+  let consumer;
 
   beforeAll(async () => {
     // TODO: Since we are calling flushall,

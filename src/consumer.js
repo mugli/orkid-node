@@ -1,5 +1,5 @@
-const ConsumerUnit = require('./consumer-unit');
 const lodash = require('lodash');
+const ConsumerUnit = require('./consumer-unit');
 
 const defaults = require('./defaults');
 

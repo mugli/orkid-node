@@ -102,7 +102,7 @@ module.exports = () => {
   Object.keys(addCommand).forEach(command => {
     const { string, buffer } = IORedis.prototype.createBuiltinCommand(command);
     IORedis.prototype[command] = string;
-    IORedis.prototype[command + 'Buffer'] = buffer;
+    IORedis.prototype[`${command}Buffer`] = buffer;
     addCommand[command](IORedis);
   });
 };

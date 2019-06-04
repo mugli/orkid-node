@@ -1,4 +1,5 @@
 const prepareIoredis = require('./prepare-ioredis.js');
+
 prepareIoredis();
 
 const IORedis = require('ioredis');
@@ -135,8 +136,8 @@ class ConsumerUnit {
 
   async _cleanUp() {
     function difference(setA, setB) {
-      var _difference = new Set(setA);
-      for (var elem of setB) {
+      const _difference = new Set(setA);
+      for (const elem of setB) {
         _difference.delete(elem);
       }
       return _difference;
@@ -158,11 +159,9 @@ class ConsumerUnit {
     for (const con of consumerNames) {
       if (consumerInfo[con].pending) {
         pendingConsumerNames.add(con);
-      } else {
-        if (consumerInfo[con].idle > this.consumerOptions.workerFnTimeoutMs * 5) {
-          // Just to be safe, only delete really world consumers
-          emptyConsumerNames.add(con);
-        }
+      } else if (consumerInfo[con].idle > this.consumerOptions.workerFnTimeoutMs * 5) {
+        // Just to be safe, only delete really world consumers
+        emptyConsumerNames.add(con);
       }
     }
 
