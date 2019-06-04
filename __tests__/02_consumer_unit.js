@@ -19,13 +19,13 @@ describe('Consumer Unit', () => {
   });
 
   afterAll(async () => {
-    redis.disconnect();
     for (const producer of producers) {
       await producer._disconnect();
     }
     for (const consumer of consumers) {
       await consumer._disconnect();
     }
+    await redis.disconnect();
   });
 
   test('should process task', async done => {

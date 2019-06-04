@@ -9,19 +9,13 @@ describe('Producer', () => {
     // TODO: Since we are calling flushall,
     // ensure redis in test env can be used with a separate config
     redis = new IORedis();
-  });
-
-  afterAll(async () => {
-    await redis.disconnect();
-  });
-
-  beforeEach(async () => {
     await redis.flushall();
     producer = new Producer('test-queue', { redisClient: redis });
   });
 
-  afterEach(async () => {
+  afterAll(async () => {
     await producer._disconnect();
+    await redis.disconnect();
   });
 
   test('should create task', async () => {
