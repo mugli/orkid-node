@@ -1,5 +1,5 @@
-function delay(time) {
-  return new Promise(res => setTimeout(() => res(), time));
+function delay(ms) {
+  return new Promise(res => setTimeout(() => res(), ms));
 }
 
 async function waitUntilInitialized(thisObj, initializeVarName) {
