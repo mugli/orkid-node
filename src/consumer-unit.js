@@ -1,15 +1,11 @@
-const prepareIoredis = require('./prepare-ioredis.js');
-
-prepareIoredis();
-
 const IORedis = require('ioredis');
 const lodash = require('lodash');
 const shortid = require('shortid');
 
+const { ReplyError } = require('redis-errors');
 const initScripts = require('./commands');
 const { waitUntilInitialized } = require('./common');
 const Task = require('./task');
-const { ReplyError } = require('redis-errors');
 const { TimeoutError } = require('./errors');
 
 const defaults = require('./defaults');

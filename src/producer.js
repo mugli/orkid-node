@@ -1,6 +1,3 @@
-const prepareIoredis = require('./prepare-ioredis.js');
-prepareIoredis();
-
 const IORedis = require('ioredis');
 const lodash = require('lodash');
 
