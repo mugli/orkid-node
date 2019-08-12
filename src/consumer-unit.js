@@ -170,7 +170,7 @@ class ConsumerUnit {
     const clients = (await this._redis.client('LIST')).split('\n');
     const activeWorkers = new Set();
     for (const cli of clients) {
-      cli.split(' ').map(v => {
+      cli.split(' ').forEach(v => {
         if (v.startsWith('name=')) {
           const namePair = v.split('=');
           if (namePair.length > 1 && namePair[1].length) {

@@ -37,10 +37,6 @@ class Producer {
     return retval;
   }
 
-  addCron(cron, producerFn) {
-    // TODO: Implement
-  }
-
   async _disconnect() {
     await this._redis.disconnect();
   }
