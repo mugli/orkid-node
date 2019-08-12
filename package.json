@@ -5,7 +5,8 @@
   "main": "./src/index.js",
   "scripts": {
     "test": "NODE_ENV=test jest --colors --coverage --runInBand --forceExit --detectOpenHandles --testSequencer ./jest.customsequencer.js",
-    "lint": "eslint --quiet .",
+    "test:dev": "NODE_ENV=test jest --colors --coverage --runInBand --detectOpenHandles --testSequencer ./jest.customsequencer.js",
+    "lint": "eslint .",
     "prettier": "prettier --write ./**/*.js"
   },
   "repository": {
@@ -22,21 +23,21 @@
   },
   "homepage": "https://github.com/mugli/orkid#readme",
   "dependencies": {
-    "@hapi/joi": "^15.0.3",
-    "ioredis": "^4.9.5",
-    "lodash": "^4.17.11",
-    "orkid-ui": "^0.3.0",
+    "@hapi/joi": "^15.1.0",
+    "ioredis": "^4.14.0",
+    "lodash": "^4.17.15",
+    "redis-errors": "^1.2.0",
     "shortid": "^2.2.14"
   },
   "devDependencies": {
     "@jest/test-sequencer": "^24.8.0",
-    "@types/jest": "^24.0.13",
-    "eslint": "^5.16.0",
-    "eslint-config-airbnb-base": "^13.1.0",
-    "eslint-config-prettier": "^4.3.0",
-    "eslint-plugin-jest": "^22.6.4",
+    "eslint": "^6.1.0",
+    "eslint-config-airbnb-base": "^14.0.0",
+    "eslint-config-prettier": "^6.0.0",
+    "eslint-plugin-import": "^2.18.2",
+    "eslint-plugin-jest": "^22.15.0",
     "eslint-plugin-prettier": "^3.1.0",
     "jest": "^24.8.0",
-    "prettier": "^1.17.1"
+    "prettier": "^1.18.2"
   }
 }

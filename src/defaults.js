@@ -1,3 +1,5 @@
+// TODO: Add docs for options and defaults
+
 module.exports = {
   NAMESPACE: 'orkid',
   RESULTLIST: 'orkid:internals:results',

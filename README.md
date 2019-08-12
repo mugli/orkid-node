@@ -3,12 +3,13 @@
 orkid</h1>
 
 [![NPM version](https://img.shields.io/npm/v/orkid.svg)](https://www.npmjs.com/package/orkid)
+![](https://img.shields.io/circleci/build/github/mugli/orkid-node/master?token=9e4999a9e95ab359bb1b458bbaed97985308a704)
 ![](https://img.shields.io/david/mugli/orkid.svg?style=flat)
 ![](https://img.shields.io/david/dev/mugli/orkid.svg?style=flat)
 ![](https://img.shields.io/node/v/orkid.svg?style=flat)
 ![](https://img.shields.io/npm/l/orkid.svg?style=flat)
 
-Reliable and modern [Redis-streams](https://redis.io/topics/streams-intro) based task queue for Node.js.
+Reliable and modern [Redis-Streams](https://redis.io/topics/streams-intro) based task queue for Node.js.
 
 # Screenshot
 
@@ -26,7 +27,7 @@ Reliable and modern [Redis-streams](https://redis.io/topics/streams-intro) based
 
 # Why a new job queue for Node.js
 
-- All the redis-based solutions were created before [Redis-streams](https://redis.io/topics/streams-intro) became available. They all require a lot of work on the queue-side to ensure durability and atomicity of jobs. Redis streams was specifically designed to made this kind of tasks easier, thus allows simpler core in the queue and more reliable operations.
+- All the redis-based solutions were created before [Redis-Streams](https://redis.io/topics/streams-intro) became available. They all require a lot of work on the queue-side to ensure durability and atomicity of jobs. Redis-Streams was specifically designed to made this kind of tasks easier, thus allows simpler core in the queue and more reliable operations.
 
 - None of existing usable job queues in Node.js offers a monitoring option that we liked.
 
@@ -34,12 +35,12 @@ Reliable and modern [Redis-streams](https://redis.io/topics/streams-intro) based
 
 # Features
 
-- [x] Orkid lets Redis do the heavy lifting with [redis streams](https://redis.io/topics/streams-intro).
+- [x] Orkid lets Redis do the heavy lifting with [Redis-Streams](https://redis.io/topics/streams-intro).
 - [x] **Adjustable concurrency** per consumer instance for scaling task processing. See example code. [See example code](https://github.com/mugli/orkid-node/tree/master/examples/basic).
 - [x] Job **timeouts** and **retries**. All configurable per consumer. [See example code](https://github.com/mugli/orkid-node/tree/master/examples/failure-timeout-retry).
 - [x] Task **Deduplication**. If a task is already waiting in the queue, it can be configured to avoid queueing the same task again. _(Useful for operations like posting database record updates to elasticsearch for re-indexing. Deduplication is a common pattern here to avoid unnecessary updates)_. [See example code](https://github.com/mugli/orkid-node/tree/master/examples/deduplication).
 - [ ] Monitoring and management **UI** for better visibility.
-- [ ] Cron-like **scheduled job** producing. This is different than queueing task now and executing it later. Instead the producer function will be called later at a particular time to produce task. If multiple instances of the application is running, Orkid will ensure that only one producer function gets called.
+  <!-- - [ ] Cron-like **scheduled job** producing. This is different than queueing task now and executing it later. Instead the producer function will be called later at a particular time to produce task. If multiple instances of the application is running, Orkid will ensure that only one producer function gets called. -->
 - [ ] **Rate-limiting** workers.
 
 # Requirements
@@ -47,7 +48,7 @@ Reliable and modern [Redis-streams](https://redis.io/topics/streams-intro) based
 - Node.js >= 10
 - Redis >= 5
 
-👏 **Important**: [Redis-streams](https://redis.io/topics/streams-intro) was not available before **Redis 5**! Please make sure you are meeting the requirement here.
+👏 **Important**: [Redis-Streams](https://redis.io/topics/streams-intro) was not available before **Redis 5**! Please make sure you are meeting the requirement here.
 
 # Install
 
@@ -131,7 +132,7 @@ consumer.start();
 
 <details>
   <summary>How do I set priority in the tasks?</summary>
-  Redis Streams isn't a suitable primitive to make a priority queue efficiently on top of it. Orkid doesn't support priority queues now and probably never will.
+  Redis-Streams isn't a right primitive to make a priority queue efficiently on top of it. Orkid doesn't support priority queues now and probably never will.
 
 However, as a workaround, you can create a separate queue, keep its workload minimal and use it for high priority jobs with Orkid.
 
