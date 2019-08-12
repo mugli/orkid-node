@@ -5,7 +5,7 @@
   "main": "./src/index.js",
   "scripts": {
     "test": "NODE_ENV=test jest --colors --coverage --runInBand --forceExit --detectOpenHandles --testSequencer ./jest.customsequencer.js",
-    "lint": "eslint --quiet .",
+    "lint": "eslint .",
     "prettier": "prettier --write ./**/*.js"
   },
   "repository": {

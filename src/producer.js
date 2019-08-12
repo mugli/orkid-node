@@ -30,6 +30,7 @@ class Producer {
   async addTask(data, dedupKey) {
     await waitUntilInitialized(this, '_isInitialized');
 
+    // enqueue is our custom lua script to handle task de-duplication and adding to streams atomically
     const retval = await this._redis.enqueue(this._QNAME, this._DEDUPSET, JSON.stringify(data), dedupKey, 0);
     return retval;
   }
