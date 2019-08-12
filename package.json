@@ -4,7 +4,7 @@
   "description": "Reliable and modern Redis-streams based task queue for Node.js",
   "main": "./src/index.js",
   "scripts": {
-    "test": "NODE_ENV=test jest --colors --coverage --runInBand --forceExit --detectOpenHandles --testSequencer ./jest.customsequencer.js",
+    "test": "NODE_ENV=test jest --colors --coverage --forceExit --detectOpenHandles --testSequencer ./jest.customsequencer.js",
     "lint": "eslint .",
     "prettier": "prettier --write ./**/*.js"
   },

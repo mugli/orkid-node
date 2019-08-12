@@ -3,6 +3,7 @@
 orkid</h1>
 
 [![NPM version](https://img.shields.io/npm/v/orkid.svg)](https://www.npmjs.com/package/orkid)
+![](https://img.shields.io/circleci/build/github/mugli/orkid-node/master?token=9e4999a9e95ab359bb1b458bbaed97985308a704)
 ![](https://img.shields.io/david/mugli/orkid.svg?style=flat)
 ![](https://img.shields.io/david/dev/mugli/orkid.svg?style=flat)
 ![](https://img.shields.io/node/v/orkid.svg?style=flat)
