@@ -4,7 +4,7 @@ const shortid = require('shortid');
 
 const { ReplyError } = require('redis-errors');
 const initScripts = require('./commands');
-const { waitUntilInitialized, parseStreamResponse, parseMessageResponse, parseXPendingResponse } = require('./common');
+const { waitUntilInitialized, parseStreamResponse, parseXPendingResponse } = require('./common');
 const Task = require('./task');
 const { TimeoutError } = require('./errors');
 
@@ -107,16 +107,17 @@ class ConsumerUnit {
       this._QNAME,
       '0'
     );
-    // console.log(JSON.stringify({ redisReply }, null, 2));
+
     const taskObj = parseStreamResponse(redisReply);
-    // console.log(JSON.stringify({ taskObj }, null, 2));
     const tasks = [].concat(...Object.values(taskObj));
-    // console.log(JSON.stringify({ tasks }, null, 2));
 
     for (const t of tasks) {
       const task = new Task(t.id, t.data);
       this._pendingTasks.push(task);
     }
+
+    // Used for testing
+    return tasks.length;
   }
 
   async _waitForTask() {
@@ -190,14 +191,15 @@ class ConsumerUnit {
     // Orkid consumers always set a name to redis connection
     // Filter active connections those have names
     for (const cli of clients) {
-      cli.split(' ').forEach(v => {
+      const values = cli.split(' ');
+      for (const v of values) {
         if (v.startsWith('name=')) {
           const namePair = v.split('=');
           if (namePair.length > 1 && namePair[1].length) {
             activeWorkers.add(namePair[1]);
           }
         }
-      });
+      }
     }
 
     // Workers that have pending tasks but are not active anymore in redis
@@ -206,21 +208,16 @@ class ConsumerUnit {
     // Workers that have not pending tasks and also  are not active anymore in redis
     const orphanEmptyWorkers = difference(emptyConsumerNames, activeWorkers);
 
+    const claimInfo = {};
     for (const w of orphanWorkers) {
-      // TODO: FIXME: Test if this is working after upgrading ioredis, remove console logs
-
       // xpending: https://redis.io/commands/xpending
       const redisXPendingReply = await this._redis.xpending(this._QNAME, this._GRPNAME, '-', '+', 1000, w);
       const pendingTasks = parseXPendingResponse(redisXPendingReply);
-      console.log(JSON.stringify({ redisXPendingReply }, null, 2));
-      console.log(JSON.stringify({ pendingTasks }, null, 2));
 
       const ids = pendingTasks.map(t => t.id);
 
-      // TODO: FIXME: Test if this is working after upgrading ioredis, remove console logs
-
       // xclaim: https://redis.io/commands/xclaim
-      const redisXClaimReply = await this._redis.xclaim(
+      const claim = await this._redis.xclaim(
         this._QNAME,
         this._GRPNAME,
         this._name,
@@ -228,18 +225,35 @@ class ConsumerUnit {
         ...ids,
         'JUSTID'
       );
-      const claim = parseMessageResponse(redisXClaimReply);
-      console.log(JSON.stringify({ redisXClaimReply }, null, 2));
-      console.log(JSON.stringify({ claim }, null, 2));
+
+      claimInfo[w] = claim.length;
       this._log(`Claimed ${claim.length} pending tasks from worker ${w}`);
     }
 
     // Housecleaning. Remove empty and inactive consumers since redis doesn't do that itself
+    const deleteInfo = [];
     for (const w of orphanEmptyWorkers) {
       // Our custom lua script to recheck and delete consumer atomically and safely
       await this._redis.delconsumer(this._QNAME, this._GRPNAME, w);
+      deleteInfo.push(w);
       this._log(`Deleted old consumer ${w}`);
     }
+
+    // Return value used for testing
+    const retval = {
+      consumerNames,
+      pendingConsumerNames: Array.from(pendingConsumerNames),
+      emptyConsumerNames: Array.from(emptyConsumerNames),
+      activeWorkers: Array.from(activeWorkers),
+      orphanWorkers: Array.from(orphanWorkers),
+      orphanEmptyWorkers: Array.from(orphanEmptyWorkers),
+      claimInfo,
+      deleteInfo
+    };
+
+    this._log(`Cleanup result:`, retval);
+
+    return retval;
   }
 
   async _processLoop() {
@@ -271,13 +285,13 @@ class ConsumerUnit {
     }
 
     const task = this._pendingTasks.shift();
-    this._log('Staring to process task', task);
+    this._log('Starting to process task', task);
     this._totalTasks++;
 
     // TODO: Update queue specific total processed stat
     await this._redis.hincrby(defaults.STAT, 'processed', 1);
 
-    const metadata = { id: task.id, qname: this.qname, retryCount: task.retryCount };
+    const metadata = { id: task.id, qname: this.qname, retryCount: task.retryCount, consumerName: this._name };
     try {
       const result = await this._wrapWorkerFn(task.dataObj, metadata);
       await this._processSuccess(task, result);

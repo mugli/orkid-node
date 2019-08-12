@@ -39,7 +39,7 @@ describe('Consumer Unit', () => {
 
     async function workerFn(data, metadata) {
       expect(data).toBe(taskData);
-      expect(metadata).toEqual({ id, qname, retryCount: 0 });
+      expect(metadata).toMatchObject({ id, qname, retryCount: 0 });
 
       done();
     }
@@ -60,7 +60,7 @@ describe('Consumer Unit', () => {
 
     async function workerFn(data, metadata) {
       expect(data).toEqual(taskData);
-      expect(metadata).toEqual({ id, qname, retryCount: 0 });
+      expect(metadata).toMatchObject({ id, qname, retryCount: 0 });
 
       done();
     }
