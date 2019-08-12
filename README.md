@@ -40,7 +40,7 @@ Reliable and modern [Redis-streams](https://redis.io/topics/streams-intro) based
 - [x] Job **timeouts** and **retries**. All configurable per consumer. [See example code](https://github.com/mugli/orkid-node/tree/master/examples/failure-timeout-retry).
 - [x] Task **Deduplication**. If a task is already waiting in the queue, it can be configured to avoid queueing the same task again. _(Useful for operations like posting database record updates to elasticsearch for re-indexing. Deduplication is a common pattern here to avoid unnecessary updates)_. [See example code](https://github.com/mugli/orkid-node/tree/master/examples/deduplication).
 - [ ] Monitoring and management **UI** for better visibility.
-- [ ] Cron-like **scheduled job** producing. This is different than queueing task now and executing it later. Instead the producer function will be called later at a particular time to produce task. If multiple instances of the application is running, Orkid will ensure that only one producer function gets called.
+  <!-- - [ ] Cron-like **scheduled job** producing. This is different than queueing task now and executing it later. Instead the producer function will be called later at a particular time to produce task. If multiple instances of the application is running, Orkid will ensure that only one producer function gets called. -->
 - [ ] **Rate-limiting** workers.
 
 # Requirements
