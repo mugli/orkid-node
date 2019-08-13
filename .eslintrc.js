@@ -16,6 +16,7 @@ module.exports = {
     ecmaVersion: 2018
   },
   rules: {
+    'prettier/prettier': 'error',
     'no-underscore-dangle': 0,
     'no-restricted-syntax': 0,
     radix: 0,

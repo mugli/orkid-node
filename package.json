@@ -6,6 +6,7 @@
   "scripts": {
     "test": "NODE_ENV=test jest --colors --coverage --runInBand --forceExit --detectOpenHandles --testSequencer ./jest.customsequencer.js",
     "test:dev": "NODE_ENV=test jest --colors --coverage --runInBand --detectOpenHandles --testSequencer ./jest.customsequencer.js",
+    "upload_coverage": "codecov",
     "lint": "eslint .",
     "prettier": "prettier --write ./**/*.js"
   },
@@ -31,6 +32,7 @@
   },
   "devDependencies": {
     "@jest/test-sequencer": "^24.8.0",
+    "codecov": "^3.5.0",
     "eslint": "^6.1.0",
     "eslint-config-airbnb-base": "^14.0.0",
     "eslint-config-prettier": "^6.0.0",
