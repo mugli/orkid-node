@@ -18,7 +18,6 @@ Reliable and modern [Redis-Streams](https://redis.io/topics/streams-intro) based
 
 # Table of Contents
 
-- [Why another job queue for Node.js](#why-a-new-job-queue-for-nodejs)
 - [Features](#features)
 - [Requirements](#requirements)
 - [Install](#install)
@@ -26,23 +25,15 @@ Reliable and modern [Redis-Streams](https://redis.io/topics/streams-intro) based
 - [Monitoring and Management UI/Admin Panel](#monitoring-and-management-ui-admin-panel)
 - [FAQ](#faq)
 
-# Why a new job queue for Node.js
-
-- All the redis-based solutions were created before [Redis-Streams](https://redis.io/topics/streams-intro) became available. They all require a lot of work on the queue-side to ensure durability and atomicity of jobs. Redis-Streams was specifically designed to made this kind of tasks easier, thus allows simpler core in the queue and more reliable operations.
-
-- None of existing usable job queues in Node.js offers a monitoring option that we liked.
-
-- None of the existing usable task queues support task deduplication.
-
 # Features
 
 - [x] Orkid lets Redis do the heavy lifting with [Redis-Streams](https://redis.io/topics/streams-intro).
 - [x] **Adjustable concurrency** per consumer instance for scaling task processing. See example code. [See example code](https://github.com/mugli/orkid-node/tree/master/examples/basic).
 - [x] Job **timeouts** and **retries**. All configurable per consumer. [See example code](https://github.com/mugli/orkid-node/tree/master/examples/failure-timeout-retry).
 - [x] Task **Deduplication**. If a task is already waiting in the queue, it can be configured to avoid queueing the same task again. _(Useful for operations like posting database record updates to elasticsearch for re-indexing. Deduplication is a common pattern here to avoid unnecessary updates)_. [See example code](https://github.com/mugli/orkid-node/tree/master/examples/deduplication).
-- [ ] Monitoring and management **UI** for better visibility.
+- [x] Monitoring and management **UI** for better visibility.
   <!-- - [ ] Cron-like **scheduled job** producing. This is different than queueing task now and executing it later. Instead the producer function will be called later at a particular time to produce task. If multiple instances of the application is running, Orkid will ensure that only one producer function gets called. -->
-- [ ] **Rate-limiting** workers.
+- [ ] **Rate-limiting** workers. (_work in progress_)
 
 # Requirements
 
@@ -109,7 +100,7 @@ const consumer = new Consumer('basic', workerFn);
 consumer.start();
 ```
 
-👏 **More examples are available in [./examples](https://github.com/mugli/orkid-node/tree/master/examples) directory.**
+👏 **More examples are available in the [./examples](https://github.com/mugli/orkid-node/tree/master/examples) directory.**
 
 # Monitoring and Management UI/Admin Panel
 
@@ -118,7 +109,7 @@ consumer.start();
 
 [TODO: Description]
 
-# Task/job lifecycle
+# Task/job life-cycle
 
 [TODO: Add a flowchart here]
 
@@ -127,6 +118,18 @@ consumer.start();
 <details>
   <summary>Is this production ready?</summary>
   Not yet.
+</details>
+
+<p></p>
+
+<details>
+  <summary>Why a new job queue for Node.js?</summary>
+  All the redis-based solutions were created before [Redis-Streams](https://redis.io/topics/streams-intro) became available. They all require a lot of work on the queue-side to ensure durability and atomicity of jobs. Redis-Streams was specifically designed to made this kind of tasks easier, thus allows simpler core in the queue and more reliable operations.
+
+None of existing usable job queues in Node.js offers a monitoring option that we liked.
+
+None of the existing usable task queues support task de-duplication.
+
 </details>
 
 <p></p>
@@ -160,5 +163,5 @@ MIT
 
 ### Related Projects
 
-- [orkid-api](https://github.com/mugli/orkid-api): GraphQL API to monitor and manage Orkid task queue
-- [orkid-ui](https://github.com/mugli/orkid-ui): Dashboard to monitor and manage Orkid task queue
+- [orkid-ui](https://github.com/mugli/orkid-ui): Dashboard to monitor and manage Orkid task queue.
+- [orkid-api](https://github.com/mugli/orkid-api): GraphQL API to monitor and manage Orkid task queue (used internally by orkid-ui).
