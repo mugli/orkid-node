@@ -4,7 +4,8 @@ const shortid = require('shortid');
 
 const { ReplyError } = require('redis-errors');
 const initScripts = require('./commands');
-const { waitUntilInitialized, parseStreamResponse, parseXPendingResponse } = require('./common');
+const { waitUntilInitialized } = require('./common');
+const { parseStreamResponse, parseXPendingResponse } = require('./redis-transformers');
 const Task = require('./task');
 const { TimeoutError } = require('./errors');
 
