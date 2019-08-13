@@ -2,7 +2,14 @@
 
 All notable changes to this project will be documented in this file. Dates are displayed in UTC.
 
-#### [v0.4.0](https://github.com/mugli/orkid/compare/v0.3.0...v0.4.0)
+#### [v0.5.0](https://github.com/mugli/orkid/compare/0.4.0...v0.5.0)
+
+> 13 August 2019
+
+- Update config [`9c26364`](https://github.com/mugli/orkid/commit/9c2636492e9a994bf7a1c8bd1b99218c79a9582b)
+- Add changelog [`f293779`](https://github.com/mugli/orkid/commit/f2937790e3ca8237650cadf94234e5dae7c51522)
+
+#### [0.4.0](https://github.com/mugli/orkid/compare/v0.3.0...0.4.0)
 
 > 13 August 2019
 
