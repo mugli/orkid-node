@@ -1,9 +1,9 @@
 module.exports = {
   hooks: {
-    'before:release': 'npm run changelog -- -p'
+    'before:release': 'npx auto-changelog -p'
   },
   git: {
-    changelog: 'npm run changelog -- --stdout --commit-limit false --unreleased --template ./changelog-template.hbs',
+    changelog: 'npx auto-changelog --stdout --commit-limit false --unreleased --template ./changelog-template.hbs',
     requireCleanWorkingDir: true,
     requireUpstream: true,
     requireCommits: true,
@@ -12,7 +12,7 @@ module.exports = {
     commitMessage: 'Release ${version}',
     commitArgs: '',
     tag: true,
-    tagName: '${version}',
+    tagName: 'v${version}',
     tagAnnotation: 'Release ${version}',
     tagArgs: '',
     push: true,
