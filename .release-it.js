@@ -19,7 +19,7 @@ module.exports = {
     pushArgs: '--follow-tags'
   },
   npm: {
-    publish: false
+    publish: true
   },
   github: {
     release: true,
