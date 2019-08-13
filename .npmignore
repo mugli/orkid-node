@@ -34,3 +34,6 @@ jest.customsequencer.js
 .prettierignore
 .prettierrc.json
 package-lock.json
+.release-it.js
+.eslintignore
+changelog-template.hbs

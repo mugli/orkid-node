@@ -10,8 +10,10 @@
     "upload_coverage": "codecov",
     "lint": "eslint .",
     "prettier": "prettier --write '**/*.js'",
-    "release": "release-it",
-    "release:dry": "release-it --dry-run"
+    "changelog": "auto-changelog",
+    "release:check": "npm run lint && npm test",
+    "release": "npm run release:check && release-it",
+    "release:dry": "npm run release:check && release-it --dry-run"
   },
   "repository": {
     "type": "git",
@@ -34,7 +36,7 @@
   },
   "devDependencies": {
     "@jest/test-sequencer": "^24.8.0",
-    "auto-changelog": "^1.14.1",
+    "auto-changelog": "*",
     "codecov": "^3.5.0",
     "eslint": "^6.1.0",
     "eslint-config-airbnb-base": "^14.0.0",

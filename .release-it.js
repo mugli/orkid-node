@@ -1,9 +1,9 @@
 module.exports = {
   hooks: {
-    'before:release': 'npx auto-changelog -p'
+    'before:release': 'npm run changelog -- -p'
   },
   git: {
-    changelog: 'npx auto-changelog --stdout --commit-limit false --unreleased --template ./changelog-template.hbs',
+    changelog: 'npm run changelog -- --stdout --commit-limit false --unreleased --template ./changelog-template.hbs',
     requireCleanWorkingDir: true,
     requireUpstream: true,
     requireCommits: true,
