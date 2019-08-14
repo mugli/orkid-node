@@ -26,6 +26,7 @@ Reliable and modern [Redis-Streams](https://redis.io/topics/streams-intro) based
 - [Requirements](#requirements)
 - [Install](#install)
 - [Examples](#examples)
+- [API Documentation](#api-documentation)
 - [Monitoring and Management UI/Admin Panel](#monitoring-and-management-ui-admin-panel)
 - [FAQ](#faq)
 
@@ -122,6 +123,12 @@ consumer.start();
 ```
 
 > 👏 **More examples are available in the [./examples](https://github.com/mugli/orkid-node/tree/master/examples) directory, including how to do task de-duplication, retry on failure, timeout etc.** 👏
+
+---
+
+# API Documentation
+
+**API Documentation is [available here](https://github.com/mugli/orkid-node/blob/master/API.md).**
 
 ---
 

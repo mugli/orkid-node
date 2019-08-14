@@ -27,7 +27,7 @@ class Producer {
     this._isInitialized = true;
   }
 
-  async addTask(data, dedupKey) {
+  async addTask(data = null, dedupKey) {
     await waitUntilInitialized(this, '_isInitialized');
 
     // enqueue is our custom lua script to handle task de-duplication and adding to streams atomically
