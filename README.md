@@ -12,9 +12,13 @@ orkid</h1>
 
 Reliable and modern [Redis-Streams](https://redis.io/topics/streams-intro) based task queue for Node.js.
 
+---
+
 # Screenshot
 
 ![screenshot](https://raw.githubusercontent.com/mugli/orkid-node/master/screenshot.png)
+
+---
 
 # Table of Contents
 
@@ -24,6 +28,8 @@ Reliable and modern [Redis-Streams](https://redis.io/topics/streams-intro) based
 - [Examples](#examples)
 - [Monitoring and Management UI/Admin Panel](#monitoring-and-management-ui-admin-panel)
 - [FAQ](#faq)
+
+---
 
 # Features
 
@@ -35,18 +41,24 @@ Reliable and modern [Redis-Streams](https://redis.io/topics/streams-intro) based
   <!-- - [ ] Cron-like **scheduled job** producing. This is different than queueing task now and executing it later. Instead the producer function will be called later at a particular time to produce task. If multiple instances of the application is running, Orkid will ensure that only one producer function gets called. -->
 - [ ] **Rate-limiting** workers. (_work in progress_)
 
+---
+
 # Requirements
 
 - Node.js >= 10
 - Redis >= 5
 
-👏 **Important**: [Redis-Streams](https://redis.io/topics/streams-intro) was not available before **Redis 5**! Please make sure you are meeting the requirement here.
+👏 **Important**: [Redis-Streams](https://redis.io/topics/streams-intro) feature is not available before **Redis version 5**.
+
+---
 
 # Install
 
 ```
 npm install orkid --save
 ```
+
+---
 
 # Examples
 
@@ -57,7 +69,7 @@ Producing tasks:
 ```js
 const { Producer } = require('orkid');
 
-// `basic` is the name of the queue here
+// `basic` is the queue name here
 //  We'll use the same name in the consumer to process this task
 const producer = new Producer('basic');
 
@@ -71,7 +83,7 @@ async function addTasks() {
 addTasks()
   .then(() => {
     console.log('Done');
-    process.exit(); // Disconnect from redis
+    process.exit(); // To disconnect from redis
   })
   .catch(e => console.error(e));
 ```
@@ -87,6 +99,14 @@ async function workerFn(data, metadata) {
   /*
     Do operation on `data` here
     and store the result in `result` variable
+
+    Anything you return from this function will
+    be saved in redis and can be viewed in the Orkid UI.
+
+    Returning nothing is fine too.
+
+    Throwing error will mark the job as failed,
+    which can be retried too.
   */
 
   console.log('Task done!');
@@ -97,27 +117,35 @@ async function workerFn(data, metadata) {
 const consumer = new Consumer('basic', workerFn);
 
 // Start processing tasks!
+// Important: Until you call this method, orkid consumer will do nothing.
 consumer.start();
 ```
 
-👏 **More examples are available in the [./examples](https://github.com/mugli/orkid-node/tree/master/examples) directory.**
+> 👏 **More examples are available in the [./examples](https://github.com/mugli/orkid-node/tree/master/examples) directory, including how to do task de-duplication, retry on failure, timeout etc.** 👏
+
+---
 
 # Monitoring and Management UI/Admin Panel
 
 ![screenshot](https://raw.githubusercontent.com/mugli/orkid-node/master/screenshot.png)
 ![screenshot](https://raw.githubusercontent.com/mugli/orkid-node/master/screenshot-2.png)
 
-[TODO: Description]
+> You need to run `orkid-ui` separately for the dashboard. Detail instructions on how to run `orkid-ui` locally or in production using docker/docker-compose can be found here:
+> https://github.com/mugli/orkid-ui#running-locally
+
+---
 
 # Task/job life-cycle
 
 [TODO: Add a flowchart here]
 
+---
+
 # FAQ
 
 <details>
   <summary>Is this production ready?</summary>
-  Not yet.
+  This project is under active development right now. API may introduce breaking changes until we reach version 1.0. After that semantic versioning will be followed.
 </details>
 
 <p></p>
@@ -151,9 +179,13 @@ However, as a workaround, you can create a separate queue, keep its workload min
 
 <p></p>
 
-## Author
+---
+
+## Maintainer(s)
 
 - Mehdi Hasan Khan ([@MehdiHK](https://twitter.com/MehdiHK))
+
+---
 
 ## License
 
