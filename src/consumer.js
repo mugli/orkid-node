@@ -14,6 +14,10 @@ class Consumer {
       throw new InvalidConfigError('Concurrency cannot be less than 1');
     }
 
+    if (!workerFn || typeof workerFn !== 'function') {
+      throw new Error('workerFn is required');
+    }
+
     this.consumers = [];
     for (let i = 0; i < this.concurrency; i++) {
       const consumer = new ConsumerUnit(qname, workerFn, options);

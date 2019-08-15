@@ -8,9 +8,6 @@ module.exports = {
   STAT: 'orkid:internals:stat',
   QUENAMES: 'orkid:internals:qnames',
   redisOptions: {},
-  producerOptions: {
-    deduplicate: false
-  },
   queueOptions: {
     // Currently there is no API to override these defaults
     maxResultListSize: 10000,
