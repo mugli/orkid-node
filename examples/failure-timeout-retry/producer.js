@@ -1,4 +1,4 @@
-const { Producer } = require('../../src/');
+const { Producer } = require('orkid');
 
 const producer = new Producer('retriable-queue');
 

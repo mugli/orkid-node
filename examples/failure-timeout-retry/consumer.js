@@ -1,4 +1,4 @@
-const { Consumer } = require('../../src/');
+const { Consumer } = require('orkid');
 
 const delay = time => new Promise(res => setTimeout(() => res(), time));
 

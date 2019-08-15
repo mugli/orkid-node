@@ -15,6 +15,14 @@ module.exports = {
   parserOptions: {
     ecmaVersion: 2018
   },
+  overrides: [
+    {
+      files: ['examples/**/*.js'],
+      rules: {
+        'import/no-unresolved': 0
+      }
+    }
+  ],
   rules: {
     'prettier/prettier': 'error',
     'no-underscore-dangle': 0,
