@@ -3,7 +3,7 @@
 orkid</h1>
 
 [![NPM version](https://img.shields.io/npm/v/orkid.svg)](https://www.npmjs.com/package/orkid)
-![Build Status](https://img.shields.io/circleci/build/github/mugli/orkid-node/master?token=9e4999a9e95ab359bb1b458bbaed97985308a704)
+[![Build Status](https://img.shields.io/circleci/build/github/mugli/orkid-node/master?token=9e4999a9e95ab359bb1b458bbaed97985308a704)](https://circleci.com/gh/mugli/orkid-node)
 [![codecov](https://codecov.io/gh/mugli/orkid-node/branch/master/graph/badge.svg)](https://codecov.io/gh/mugli/orkid-node)
 ![Dependencies](https://img.shields.io/david/mugli/orkid.svg?style=flat)
 ![Dev Dependencies](https://img.shields.io/david/dev/mugli/orkid.svg?style=flat)
