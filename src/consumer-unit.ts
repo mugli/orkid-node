@@ -144,7 +144,7 @@ export class ConsumerUnit {
     );
 
     const taskObj = parseStreamResponse(redisReply);
-    //@ts-ignore
+    // @ts-ignore
     const tasks: StreamValue[] = [].concat(...Object.values(taskObj));
 
     for (const t of tasks) {
