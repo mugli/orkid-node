@@ -1,6 +1,7 @@
-const { QUENAMES } = require('./defaults');
+import * as IORedis from 'ioredis';
+import { defaultOptions } from './defaults';
 
-function initScripts(redis) {
+export function initScripts(redis: IORedis.Redis) {
   const pArr = [];
 
   pArr.push(
@@ -28,7 +29,7 @@ function initScripts(redis) {
 
       local retval
 
-      redis.call("SADD", "${QUENAMES}", QNAME)
+      redis.call("SADD", "${defaultOptions.QUENAMES}", QNAME)
 
       if dedupKey == nil or dedupKey == '' then
         retval = redis.call("XADD", QNAME, "*", "data", data, "dedupKey", dedupKey, "retryCount", retryCount)
@@ -70,7 +71,7 @@ function initScripts(redis) {
 
       local retval
 
-      redis.call("SADD", "${QUENAMES}", QNAME)
+      redis.call("SADD", "${defaultOptions.QUENAMES}", QNAME)
 
       if dedupKey == nil or dedupKey == '' then
         retval = redis.call("XADD", QNAME, "*", "data", data, "dedupKey", dedupKey, "retryCount", retryCount)
@@ -156,5 +157,3 @@ function initScripts(redis) {
 
   return Promise.all(pArr);
 }
-
-module.exports = initScripts;

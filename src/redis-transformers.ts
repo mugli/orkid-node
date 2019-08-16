@@ -2,16 +2,12 @@
   Source: https://github.com/luin/ioredis/issues/747#issuecomment-500735545
 */
 
-function parseObjectResponse(reply, customParser = null) {
+function parseObjectResponse(reply) {
   if (!Array.isArray(reply)) {
     return reply;
   }
   const data = {};
   for (let i = 0; i < reply.length; i += 2) {
-    if (customParser) {
-      data[reply[i]] = customParser(reply[i], reply[i + 1]);
-      continue;
-    }
     data[reply[i]] = reply[i + 1];
   }
   return data;
@@ -66,7 +62,7 @@ const parseXPendingResponse = reply => {
   });
 };
 
-module.exports = {
+export = {
   parseStreamResponse,
   parseMessageResponse,
   parseXPendingResponse

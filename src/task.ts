@@ -54,5 +54,3 @@ export class Task {
     this.retryCount++;
   }
 }
-
-export default Task;

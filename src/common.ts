@@ -1,8 +1,12 @@
-function delay(ms) {
+export function delay(ms: number) {
   return new Promise(res => setTimeout(() => res(), ms));
 }
 
-async function waitUntilInitialized(thisObj, initializeVarName) {
+interface LooseObject {
+  [key: string]: boolean;
+}
+
+export async function waitUntilInitialized(thisObj: LooseObject, initializeVarName: string) {
   let counter = 0;
   while (!thisObj[initializeVarName]) {
     counter++;
@@ -13,8 +17,3 @@ async function waitUntilInitialized(thisObj, initializeVarName) {
     }
   }
 }
-
-module.exports = {
-  delay,
-  waitUntilInitialized
-};
