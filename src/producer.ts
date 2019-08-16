@@ -7,8 +7,9 @@ import { waitUntilInitialized } from './common';
 import { defaultOptions } from './defaults';
 
 export interface ProducerOptions {
-  redisOptions?: IORedis.RedisOptions;
   redisClient?: IORedis.Redis;
+
+  redisOptions?: IORedis.RedisOptions;
 }
 
 export class Producer {
@@ -18,6 +19,17 @@ export class Producer {
   _isInitialized: boolean = false;
   _redisOptions: IORedis.RedisOptions = defaultOptions.redisOptions;
 
+  /**
+   * Create a new Producer for a queue
+   * @param qname name of the queue.
+   *
+   * @param options.redisClient Optional. redisClient is an instance of `ioredis`
+   *    which will be used to duplicate configs to create a new redis connection.
+   *
+   *    `options.redisClient` is used over `options.redisOptions` if both are present.
+   *
+   * @param options.redisOptions Optional. Any valid `ioredis` options.
+   */
   constructor(qname: string, { redisOptions, redisClient }: ProducerOptions = {}) {
     if (redisClient) {
       this._redis = redisClient.duplicate() as Redis;
