@@ -1,9 +1,9 @@
 const IORedis = require('ioredis');
 const shortid = require('shortid');
 
-const Producer = require('../lib/producer');
-const ConsumerUnit = require('../lib/consumer-unit');
-const defaults = require('../lib/defaults');
+const { Producer } = require('../lib/producer');
+const { ConsumerUnit } = require('../lib/consumer-unit');
+const { defaultOptions: defaults } = require('../lib/defaults');
 const { delay } = require('../lib/common');
 
 describe('Consumer Unit', () => {

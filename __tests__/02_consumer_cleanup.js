@@ -1,8 +1,8 @@
 const IORedis = require('ioredis');
 const shortid = require('shortid');
 
-const Producer = require('../lib/producer');
-const ConsumerUnit = require('../lib/consumer-unit');
+const { Producer } = require('../lib/producer');
+const { ConsumerUnit } = require('../lib/consumer-unit');
 const { delay, waitUntilInitialized } = require('../lib/common');
 
 describe('Consumer Unit - Cleanup', () => {

@@ -15,6 +15,12 @@ module.exports = {
       rules: {
         'import/no-unresolved': 0
       }
+    },
+    {
+      files: ['__tests__/**/*.js'],
+      rules: {
+        '@typescript-eslint/no-var-requires': 0
+      }
     }
   ],
   rules: {
