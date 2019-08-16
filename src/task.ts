@@ -1,4 +1,4 @@
-const Joi = require('@hapi/joi');
+import * as Joi from '@hapi/joi';
 
 const schema = Joi.object().keys({
   data: Joi.string()
@@ -19,8 +19,20 @@ const validationOptions = {
   allowUnknown: false
 };
 
-class Task {
-  constructor(id, rawData) {
+export interface RawData {
+  data: string;
+  dedupKey: string;
+  retryCount: number;
+}
+
+export class Task {
+  id: string;
+  dataString: string;
+  dataObj: unknown;
+  dedupKey: string;
+  retryCount: number;
+
+  constructor(id: string, rawData: RawData) {
     if (!id) {
       throw new Error('Task requires an ID');
     }
@@ -43,4 +55,4 @@ class Task {
   }
 }
 
-module.exports = Task;
+export default Task;
