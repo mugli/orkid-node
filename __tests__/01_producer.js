@@ -1,5 +1,5 @@
 const IORedis = require('ioredis');
-const Producer = require('../src/producer');
+const Producer = require('../lib/producer');
 
 describe('Producer', () => {
   let redis;

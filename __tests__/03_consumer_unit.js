@@ -1,10 +1,10 @@
 const IORedis = require('ioredis');
 const shortid = require('shortid');
 
-const Producer = require('../src/producer');
-const ConsumerUnit = require('../src/consumer-unit');
-const defaults = require('../src/defaults');
-const { delay } = require('../src/common');
+const Producer = require('../lib/producer');
+const ConsumerUnit = require('../lib/consumer-unit');
+const defaults = require('../lib/defaults');
+const { delay } = require('../lib/common');
 
 describe('Consumer Unit', () => {
   let redis;
