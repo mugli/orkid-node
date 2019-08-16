@@ -1,7 +1,4 @@
-const Producer = require('./producer');
-const Consumer = require('./consumer');
+import { Producer } from './producer';
+import { Consumer } from './consumer';
 
-module.exports = {
-  Producer,
-  Consumer
-};
+export { Producer, Consumer };

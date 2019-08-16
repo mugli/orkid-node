@@ -1,7 +1,7 @@
 import IORedis from 'ioredis';
 import * as lodash from 'lodash';
 
-import { initScripts } from './commands';
+import { initScripts, Redis } from './commands';
 import { waitUntilInitialized } from './common';
 
 import { defaultOptions } from './defaults';
@@ -11,28 +11,18 @@ export interface ProducerOptions {
   redisClient?: IORedis.Redis;
 }
 
-interface Redis extends IORedis.Redis {
-  enqueue(
-    qname: string,
-    dedupSet: string,
-    data: string,
-    dedupKey: string | null,
-    retryCount: number
-  ): Promise<string | null>;
-}
-
 export class Producer {
   _redis: Redis;
   _QNAME: string;
   _DEDUPSET: string;
   _isInitialized: boolean = false;
-  _redisOptions: IORedis.RedisOptions = defaults.redisOptions;
+  _redisOptions: IORedis.RedisOptions = defaultOptions.redisOptions;
 
   constructor(qname: string, { redisOptions, redisClient }: ProducerOptions = {}) {
     if (redisClient) {
       this._redis = redisClient.duplicate() as Redis;
     } else {
-      this._redisOptions = lodash.merge({}, defaults.redisOptions, redisOptions);
+      this._redisOptions = lodash.merge({}, defaultOptions.redisOptions, redisOptions);
       this._redis = new IORedis(this._redisOptions) as Redis;
     }
 

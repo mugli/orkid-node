@@ -1,18 +1,13 @@
-class TimeoutError extends Error {
-  constructor(...args) {
+export class TimeoutError extends Error {
+  constructor(...args: string[]) {
     super(...args);
     Error.captureStackTrace(this, TimeoutError);
   }
 }
 
-class InvalidConfigError extends Error {
-  constructor(...args) {
+export class InvalidConfigError extends Error {
+  constructor(...args: string[]) {
     super(...args);
     Error.captureStackTrace(this, InvalidConfigError);
   }
 }
-
-module.exports = {
-  InvalidConfigError,
-  TimeoutError
-};

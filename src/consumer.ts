@@ -1,14 +1,18 @@
-const lodash = require('lodash');
-const ConsumerUnit = require('./consumer-unit');
+import * as lodash from 'lodash';
+import { ConsumerUnit, ConsumerUnitOptions } from './consumer-unit';
 
-const defaults = require('./defaults');
+import { defaultOptions, ConsumerOptions } from './defaults';
 
-const { InvalidConfigError } = require('./errors');
+import { InvalidConfigError } from './errors';
 
-class Consumer {
-  constructor(qname, workerFn, options = {}) {
-    this.consumerOptions = lodash.merge({}, defaults.consumerOptions, options.consumerOptions);
-    this.concurrency = this.consumerOptions.concurrencyPerInstance;
+export class Consumer {
+  consumerOptions: ConsumerOptions;
+  concurrency: number;
+  consumers: ConsumerUnit[];
+
+  constructor(qname: string, workerFn: Function, options: ConsumerUnitOptions = {}) {
+    this.consumerOptions = lodash.merge({}, defaultOptions.consumerOptions, options.consumerOptions);
+    this.concurrency = this.consumerOptions.concurrencyPerInstance as number;
 
     if (this.concurrency < 1) {
       throw new InvalidConfigError('Concurrency cannot be less than 1');
@@ -43,5 +47,3 @@ class Consumer {
     }
   }
 }
-
-module.exports = Consumer;
