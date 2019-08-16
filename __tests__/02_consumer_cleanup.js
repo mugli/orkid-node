@@ -1,9 +1,9 @@
 const IORedis = require('ioredis');
 const shortid = require('shortid');
 
-const Producer = require('../src/producer');
-const ConsumerUnit = require('../src/consumer-unit');
-const { delay, waitUntilInitialized } = require('../src/common');
+const { Producer } = require('../lib/producer');
+const { ConsumerUnit } = require('../lib/consumer-unit');
+const { delay, waitUntilInitialized } = require('../lib/common');
 
 describe('Consumer Unit - Cleanup', () => {
   let redis;

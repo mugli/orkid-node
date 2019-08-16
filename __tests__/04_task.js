@@ -1,4 +1,4 @@
-const Task = require('../src/task');
+const { Task } = require('../lib/task');
 
 describe.only('Task', () => {
   test('should throw if ID is absent', () => {

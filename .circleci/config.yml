@@ -22,12 +22,12 @@ jobs: # a collection of steps
           key: dependency-cache-{{ checksum "package.json" }}
           paths:
             - ./node_modules
-      - run: # lint
-          name: lint
-          command: npm run lint
       - run: # run tests
           name: test
           command: npm test
+      - run: # lint
+          name: lint
+          command: npm run lint
       - run: # run coverage report
           name: code-coverage
           command: npm run upload_coverage

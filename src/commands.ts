@@ -1,6 +1,46 @@
-const { QUENAMES } = require('./defaults');
+import IORedis from 'ioredis';
+import { defaultOptions } from './defaults';
 
-function initScripts(redis) {
+interface Pipeline extends IORedis.Pipeline {
+  requeue(
+    qname: string,
+    dedupSet: string,
+    groupName: string,
+    taskId: string,
+    taskData: string,
+    dedupKey: string | null,
+    retryCount: number
+  ): Pipeline;
+  dequeue(qname: string, dedupSet: string, groupName: string, taskId: string, taskDedupkey: string): Pipeline;
+}
+
+export interface Redis extends IORedis.Redis {
+  enqueue(
+    qname: string,
+    dedupSet: string,
+    data: string,
+    dedupKey: string | null,
+    retryCount: number
+  ): Promise<string | null>;
+
+  requeue(
+    qname: string,
+    dedupSet: string,
+    groupName: string,
+    taskId: string,
+    taskData: string,
+    dedupKey: string | null,
+    retryCount: number
+  ): Promise<string | null>;
+
+  dequeue(qname: string, dedupSet: string, groupName: string, taskId: string, taskDedupkey: string): Promise<null>;
+
+  delconsumer(qname: string, groupName: string, consumerName: string): Promise<null>;
+
+  pipeline(commands?: string[][]): Pipeline;
+}
+
+export function initScripts(redis: IORedis.Redis) {
   const pArr = [];
 
   pArr.push(
@@ -28,7 +68,7 @@ function initScripts(redis) {
 
       local retval
 
-      redis.call("SADD", "${QUENAMES}", QNAME)
+      redis.call("SADD", "${defaultOptions.QUENAMES}", QNAME)
 
       if dedupKey == nil or dedupKey == '' then
         retval = redis.call("XADD", QNAME, "*", "data", data, "dedupKey", dedupKey, "retryCount", retryCount)
@@ -70,7 +110,7 @@ function initScripts(redis) {
 
       local retval
 
-      redis.call("SADD", "${QUENAMES}", QNAME)
+      redis.call("SADD", "${defaultOptions.QUENAMES}", QNAME)
 
       if dedupKey == nil or dedupKey == '' then
         retval = redis.call("XADD", QNAME, "*", "data", data, "dedupKey", dedupKey, "retryCount", retryCount)
@@ -156,5 +196,3 @@ function initScripts(redis) {
 
   return Promise.all(pArr);
 }
-
-module.exports = initScripts;
