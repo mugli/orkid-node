@@ -3,7 +3,7 @@ export function delay(ms: number) {
 }
 
 interface LooseObject {
-  [key: string]: boolean;
+  [key: string]: any;
 }
 
 export async function waitUntilInitialized(thisObj: LooseObject, initializeVarName: string) {

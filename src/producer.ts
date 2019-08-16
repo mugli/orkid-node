@@ -1,22 +1,43 @@
-const IORedis = require('ioredis');
-const lodash = require('lodash');
+import IORedis from 'ioredis';
+import * as lodash from 'lodash';
 
-const initScripts = require('./commands');
-const { waitUntilInitialized } = require('./common');
+import { initScripts } from './commands';
+import { waitUntilInitialized } from './common';
 
-const defaults = require('./defaults');
+import { defaultOptions } from './defaults';
 
-class Producer {
-  constructor(qname, { redisOptions, redisClient } = {}) {
+export interface ProducerOptions {
+  redisOptions?: IORedis.RedisOptions;
+  redisClient?: IORedis.Redis;
+}
+
+interface Redis extends IORedis.Redis {
+  enqueue(
+    qname: string,
+    dedupSet: string,
+    data: string,
+    dedupKey: string | null,
+    retryCount: number
+  ): Promise<string | null>;
+}
+
+export class Producer {
+  _redis: Redis;
+  _QNAME: string;
+  _DEDUPSET: string;
+  _isInitialized: boolean = false;
+  _redisOptions: IORedis.RedisOptions = defaults.redisOptions;
+
+  constructor(qname: string, { redisOptions, redisClient }: ProducerOptions = {}) {
     if (redisClient) {
-      this._redis = redisClient.duplicate();
+      this._redis = redisClient.duplicate() as Redis;
     } else {
       this._redisOptions = lodash.merge({}, defaults.redisOptions, redisOptions);
-      this._redis = new IORedis(this._redisOptions);
+      this._redis = new IORedis(this._redisOptions) as Redis;
     }
 
-    this._QNAME = `${defaults.NAMESPACE}:queue:${qname}`;
-    this._DEDUPSET = `${defaults.NAMESPACE}:queue:${qname}:dedupset`;
+    this._QNAME = `${defaultOptions.NAMESPACE}:queue:${qname}`;
+    this._DEDUPSET = `${defaultOptions.NAMESPACE}:queue:${qname}:dedupset`;
 
     this._initialize();
   }
@@ -27,7 +48,7 @@ class Producer {
     this._isInitialized = true;
   }
 
-  async addTask(data = null, dedupKey) {
+  async addTask(data = null, dedupKey: string | null = null) {
     await waitUntilInitialized(this, '_isInitialized');
 
     // enqueue is our custom lua script to handle task de-duplication and adding to streams atomically
@@ -39,5 +60,3 @@ class Producer {
     await this._redis.disconnect();
   }
 }
-
-module.exports = Producer;
