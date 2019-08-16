@@ -10,7 +10,7 @@
     "upload_coverage": "codecov",
     "lint": "eslint '**/*.{js,ts}'",
     "prettier": "prettier --write '**/*.{ts,js}'",
-    "release:check": "npm run lint && npm test",
+    "release:check": "npm test && npm run lint",
     "release": "npm run release:check && release-it",
     "release:dry": "npm run release:check && release-it --dry-run",
     "copy:nonts": "copy-and-watch 'src/**/!(*.ts|*.d.ts)' lib",
