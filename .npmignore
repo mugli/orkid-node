@@ -37,5 +37,6 @@ package-lock.json
 .release-it.js
 .eslintignore
 changelog-template.hbs
+tsconfig.json
 
 src/*

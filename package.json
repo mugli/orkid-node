@@ -14,7 +14,7 @@
     "release": "npm run release:check && release-it",
     "release:dry": "npm run release:check && release-it --dry-run",
     "copy:nonts": "copy-and-watch 'src/**/!(*.ts|*.d.ts)' lib",
-    "prepublishOnly": "npm run ts:js",
+    "prepack": "npm run ts:js",
     "ts": "tsc --noEmit",
     "ts:node": "ts-node-dev",
     "ts:coverage": "type-coverage --strict && echo '\n\n\n' && echo \"TS Files:$(find src -type f -name '*.ts' | wc -l | sed 's/ //g'), JS Files:$(find src -type f -name '*.js' | wc -l | sed 's/ //g')\"",
