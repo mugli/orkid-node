@@ -416,7 +416,7 @@ export class ConsumerUnit {
   }
 
   _wrapWorkerFn(data: any, metadata: Metadata) {
-    const timeoutMs = this.consumerOptions.workerFnTimeoutMs;
+    const timeoutMs = this.consumerOptions.workerFnTimeoutMs as number;
     const timeoutP = new Promise((_, reject) => {
       const to = setTimeout(() => {
         clearTimeout(to);
