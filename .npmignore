@@ -40,3 +40,4 @@ changelog-template.hbs
 tsconfig.json
 
 src/*
+badges/
