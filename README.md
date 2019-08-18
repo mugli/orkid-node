@@ -2,9 +2,11 @@
 <img src="https://raw.github.com/mugli/orkid-node/master/orkid.svg?sanitize=true" width="150px" height="150px" /><br />
 orkid</h1>
 
+<!-- [![codecov](https://codecov.io/gh/mugli/orkid-node/branch/master/graph/badge.svg)](https://codecov.io/gh/mugli/orkid-node) -->
+
 [![NPM version](https://img.shields.io/npm/v/orkid.svg)](https://www.npmjs.com/package/orkid)
 [![Build Status](https://img.shields.io/circleci/build/github/mugli/orkid-node/master?token=9e4999a9e95ab359bb1b458bbaed97985308a704)](https://circleci.com/gh/mugli/orkid-node)
-[![codecov](https://codecov.io/gh/mugli/orkid-node/branch/master/graph/badge.svg)](https://codecov.io/gh/mugli/orkid-node)
+![Code Coverage](https://raw.github.com/mugli/orkid-node/master/badges/badge-lines.svg?sanitize=true)
 ![Dependencies](https://img.shields.io/david/mugli/orkid.svg?style=flat)
 ![Dev Dependencies](https://img.shields.io/david/dev/mugli/orkid.svg?style=flat)
 ![Required Node](https://img.shields.io/node/v/orkid.svg?style=flat)

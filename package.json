@@ -6,6 +6,7 @@
   "main": "./lib/index.js",
   "scripts": {
     "test": "npm run ts:js && NODE_ENV=test jest --colors --coverage --runInBand --forceExit --detectOpenHandles --testSequencer ./jest.customsequencer.js",
+    "test:badges": "npm run test && jest-coverage-badges output './badges'",
     "test:dev": "npm run ts:js && NODE_ENV=test jest --colors --coverage --runInBand --detectOpenHandles --testSequencer ./jest.customsequencer.js",
     "upload_coverage": "codecov",
     "lint": "eslint '**/*.{js,ts}'",
@@ -63,6 +64,7 @@
     "eslint-plugin-jest": "^22.15.1",
     "eslint-plugin-prettier": "^3.1.0",
     "jest": "^24.8.0",
+    "jest-coverage-badges": "^1.1.2",
     "prettier": "^1.18.2",
     "release-it": "*",
     "ts-node-dev": "^1.0.0-pre.41",

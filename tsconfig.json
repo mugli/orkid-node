@@ -2,6 +2,8 @@
   "compilerOptions": {
     /* Basic Options */
     // "incremental": true,                   /* Enable incremental compilation */
+    // For Node.js 10. 
+    // Up to date Mapping: https://github.com/microsoft/TypeScript-wiki/blob/master/Node-Target-Mapping.md
     "target": "ES2018",
     /* Specify ECMAScript target version: 'ES3' (default), 'ES5', 'ES2015', 'ES2016', 'ES2017', 'ES2018', 'ES2019' or 'ESNEXT'. */
     "module": "commonjs",
