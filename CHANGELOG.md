@@ -2,12 +2,22 @@
 
 All notable changes to this project will be documented in this file. Dates are displayed in UTC.
 
-#### [v0.5.0](https://github.com/mugli/orkid/compare/0.4.0...v0.5.0)
+#### [v0.6.0](https://github.com/mugli/orkid/compare/0.5.0...v0.6.0)
+
+> 20 August 2019
+
+- Convert to TypeScript [`#41`](https://github.com/mugli/orkid/pull/41)
+- Add necessary scripts and deps of TS [`4843a78`](https://github.com/mugli/orkid/commit/4843a7884bd5d516f9b1be16d799d18640ad129f)
+- Fix type errors [`f326469`](https://github.com/mugli/orkid/commit/f326469a84054b8506154f5e166e0d30f34eb0d3)
+- Fix tests [`e2efc4b`](https://github.com/mugli/orkid/commit/e2efc4b096db88eb3fdfebd77272b1afb9df6543)
+
+#### [0.5.0](https://github.com/mugli/orkid/compare/0.4.0...0.5.0)
 
 > 13 August 2019
 
 - Update config [`9c26364`](https://github.com/mugli/orkid/commit/9c2636492e9a994bf7a1c8bd1b99218c79a9582b)
 - Add changelog [`f293779`](https://github.com/mugli/orkid/commit/f2937790e3ca8237650cadf94234e5dae7c51522)
+- Release 0.5.0 [`394a995`](https://github.com/mugli/orkid/commit/394a99517b31c94f590a7ab20aab0357be611d21)
 
 #### [0.4.0](https://github.com/mugli/orkid/compare/v0.3.0...0.4.0)
 
