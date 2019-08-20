@@ -83,6 +83,7 @@ export function initScripts(redis: IORedis.Redis) {
       end
 
       redis.call("XACK", QNAME, GRPNAME, taskId)
+      redis.call("XDEL", QNAME, taskId)
 
       return retval
       `
@@ -155,7 +156,8 @@ export function initScripts(redis: IORedis.Redis) {
         end
       end
       
-      return redis.call("XACK", QNAME, GRPNAME, taskId)
+      redis.call("XACK", QNAME, GRPNAME, taskId)
+      return redis.call("XDEL", QNAME, taskId)
       `
     })
   );
