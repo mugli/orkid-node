@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. Dates are displayed in UTC.
 
+#### [v0.7.0](https://github.com/mugli/orkid/compare/v0.6.0...v0.7.0)
+
+> 20 August 2019
+
+- Update changelog [`dc09ffc`](https://github.com/mugli/orkid/commit/dc09ffc411c5f6aebd2b5e9036805740bbe41153)
+- Call XDEL after XACK [`e8d75e6`](https://github.com/mugli/orkid/commit/e8d75e6f96e28af1686f9f97251f8e77e47de4ce)
+
 #### [v0.6.0](https://github.com/mugli/orkid/compare/0.5.0...v0.6.0)
 
 > 20 August 2019
