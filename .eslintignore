@@ -1,2 +1,3 @@
 coverage/*
 lib/*
+examples/**/node_modules
