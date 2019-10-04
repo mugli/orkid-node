@@ -82,3 +82,5 @@ typings/
 *.rdb
 
 lib/
+
+examples/**/package-lock.json
