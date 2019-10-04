@@ -25,6 +25,7 @@ describe('Consumer Unit', () => {
     for (const consumer of consumers) {
       await consumer._disconnect();
     }
+    await redis.flushall();
     await redis.disconnect();
   });
 

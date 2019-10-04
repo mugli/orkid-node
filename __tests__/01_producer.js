@@ -15,6 +15,7 @@ describe('Producer', () => {
 
   afterAll(async () => {
     await producer._disconnect();
+    await redis.flushall();
     await redis.disconnect();
   });
 
