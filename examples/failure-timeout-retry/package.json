@@ -1,0 +1,10 @@
+{
+  "name": "orkid-example",
+  "version": "1.0.0",
+  "keywords": [],
+  "private": true,
+  "license": "MIT",
+  "dependencies": {
+    "orkid": "*"
+  }
+}
