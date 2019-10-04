@@ -2,11 +2,20 @@
 
 All notable changes to this project will be documented in this file. Dates are displayed in UTC.
 
+#### [v0.8.0](https://github.com/mugli/orkid/compare/v0.7.0...v0.8.0)
+
+> 4 October 2019
+
+- Update dependencies [`69df02b`](https://github.com/mugli/orkid/commit/69df02b408b118ec1781924ed40822ffa4c1c81c)
+- Add package.json to examples [`6e389bc`](https://github.com/mugli/orkid/commit/6e389bcedd0a0e390ca7057faf80beb932cdfe5e)
+- Update gitignore [`6ee472c`](https://github.com/mugli/orkid/commit/6ee472cb23107097beb528ba3b4019370c6ec752)
+
 #### [v0.7.0](https://github.com/mugli/orkid/compare/v0.6.0...v0.7.0)
 
 > 20 August 2019
 
 - Update changelog [`dc09ffc`](https://github.com/mugli/orkid/commit/dc09ffc411c5f6aebd2b5e9036805740bbe41153)
+- Release 0.7.0 [`15a45ed`](https://github.com/mugli/orkid/commit/15a45edbee867b2f9ee7a167227165885b201ff2)
 - Call XDEL after XACK [`e8d75e6`](https://github.com/mugli/orkid/commit/e8d75e6f96e28af1686f9f97251f8e77e47de4ce)
 
 #### [v0.6.0](https://github.com/mugli/orkid/compare/0.5.0...v0.6.0)
