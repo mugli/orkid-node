@@ -47,6 +47,10 @@ export class Consumer {
       throw new Error('workerFn is required');
     }
 
+    if (!qname) {
+      throw new Error('qname is required');
+    }
+
     this.consumers = [];
     for (let i = 0; i < this.concurrency; i++) {
       const consumer = new ConsumerUnit(qname, workerFn, options);

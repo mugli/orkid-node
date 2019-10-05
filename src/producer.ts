@@ -38,6 +38,10 @@ export class Producer {
       this._redis = new IORedis(this._redisOptions) as Redis;
     }
 
+    if (!qname) {
+      throw new Error('qname is required');
+    }
+
     this._QNAME = `${defaultOptions.NAMESPACE}:queue:${qname}`;
     this._DEDUPSET = `${defaultOptions.NAMESPACE}:queue:${qname}:dedupset`;
 
