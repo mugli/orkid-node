@@ -329,8 +329,11 @@ export class ConsumerUnit {
     this._log('Starting to process task', task);
     this._totalTasks++;
 
-    // TODO: Update queue specific total processed stat
-    await this._redis.hincrby(defaultOptions.STAT, 'processed', 1);
+    await this._redis
+      .pipeline()
+      .hincrby(defaultOptions.STAT, 'processed', 1)
+      .hincrby(`${defaultOptions.STAT}:${this._QNAME}`, 'processed', 1)
+      .exec();
 
     const metadata = { id: task.id, qname: this.qname, retryCount: task.retryCount, consumerName: this._name };
     try {
@@ -366,6 +369,12 @@ export class ConsumerUnit {
       .dequeue(this._QNAME, this._DEDUPSET, this._GRPNAME, task.id, task.dedupKey) // Remove from queue
       .lpush(defaultOptions.RESULTLIST, resultVal)
       .ltrim(defaultOptions.RESULTLIST, 0, <number>defaultOptions.queueOptions.maxResultListSize - 1)
+      .lpush(`${defaultOptions.RESULTLIST}:${this._QNAME}`, resultVal)
+      .ltrim(
+        `${defaultOptions.RESULTLIST}:${this._QNAME}`,
+        0,
+        <number>defaultOptions.queueOptions.maxIndividualQueueResultSize - 1
+      )
       .exec();
   }
 
@@ -391,8 +400,8 @@ export class ConsumerUnit {
         .pipeline()
         .requeue(this._QNAME, this._DEDUPSET, this._GRPNAME, task.id, task.dataString, task.dedupKey, task.retryCount)
         .hincrby(defaultOptions.STAT, 'retries', 1)
+        .hincrby(`${defaultOptions.STAT}:${this._QNAME}`, 'retries', 1)
         .exec();
-      // TODO: Update queue specific total retries stat
     } else {
       // Move to deadlist
       await this._redis
@@ -400,9 +409,15 @@ export class ConsumerUnit {
         .dequeue(this._QNAME, this._DEDUPSET, this._GRPNAME, task.id, task.dedupKey) // Remove from queue
         .lpush(defaultOptions.DEADLIST, info)
         .ltrim(defaultOptions.DEADLIST, 0, <number>defaultOptions.queueOptions.maxDeadListSize - 1)
+        .lpush(`${defaultOptions.DEADLIST}:${this._QNAME}`, info)
+        .ltrim(
+          `${defaultOptions.DEADLIST}:${this._QNAME}`,
+          0,
+          <number>defaultOptions.queueOptions.maxIndividualQueueResultSize - 1
+        )
         .hincrby(defaultOptions.STAT, 'dead', 1)
+        .hincrby(`${defaultOptions.STAT}:${this._QNAME}`, 'dead', 1)
         .exec();
-      // TODO: Update queue specific total dead stat
     }
 
     // Add to failed list in all cases
@@ -410,9 +425,15 @@ export class ConsumerUnit {
       .pipeline()
       .lpush(defaultOptions.FAILEDLIST, info)
       .ltrim(defaultOptions.FAILEDLIST, 0, <number>defaultOptions.queueOptions.maxFailedListSize - 1)
+      .lpush(`${defaultOptions.FAILEDLIST}:${this._QNAME}`, info)
+      .ltrim(
+        `${defaultOptions.FAILEDLIST}:${this._QNAME}`,
+        0,
+        <number>defaultOptions.queueOptions.maxIndividualQueueResultSize - 1
+      )
       .hincrby(defaultOptions.STAT, 'failed', 1)
+      .hincrby(`${defaultOptions.STAT}:${this._QNAME}`, 'failed', 1)
       .exec();
-    // TODO: Update queue specific total failed stat
   }
 
   _wrapWorkerFn(data: any, metadata: Metadata) {
