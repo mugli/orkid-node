@@ -38,8 +38,8 @@ export class Producer {
       this._redis = new IORedis(this._redisOptions) as Redis;
     }
 
-    if (!qname) {
-      throw new Error('qname is required');
+    if (!qname || qname === defaultOptions.INTERNALS) {
+      throw new Error(`qname cannot be empty or set as "${defaultOptions.INTERNALS}"`);
     }
 
     this._QNAME = `${defaultOptions.NAMESPACE}:queue:${qname}`;

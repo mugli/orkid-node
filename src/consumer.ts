@@ -47,8 +47,8 @@ export class Consumer {
       throw new Error('workerFn is required');
     }
 
-    if (!qname) {
-      throw new Error('qname is required');
+    if (!qname || qname === defaultOptions.INTERNALS) {
+      throw new Error(`qname cannot be empty or set as "${defaultOptions.INTERNALS}"`);
     }
 
     this.consumers = [];
