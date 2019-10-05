@@ -5,6 +5,7 @@ import * as IORedis from 'ioredis';
 const redisOptions: IORedis.RedisOptions = {};
 
 export interface QueueOptions {
+  maxIndividualQueueResultSize?: number;
   maxResultListSize?: number;
   maxFailedListSize?: number;
   maxDeadListSize?: number;
@@ -12,9 +13,10 @@ export interface QueueOptions {
 
 const queueOptions: QueueOptions = {
   // Currently there is no API to override these defaults
-  maxResultListSize: 10000,
-  maxFailedListSize: 100000,
-  maxDeadListSize: 100000
+  maxIndividualQueueResultSize: 10_000,
+  maxResultListSize: 100_000,
+  maxFailedListSize: 100_000,
+  maxDeadListSize: 100_000
 };
 
 export interface ConsumerOptions {
@@ -42,12 +44,12 @@ const loggingOptions: LoggingOptions = {
 };
 
 export const defaultOptions = {
-  NAMESPACE: 'orkid',
-  RESULTLIST: 'orkid:internals:results',
-  FAILEDLIST: 'orkid:internals:failed',
-  DEADLIST: 'orkid:internals:dead',
-  STAT: 'orkid:internals:stat',
-  QUENAMES: 'orkid:internals:qnames',
+  NAMESPACE: '__orkid',
+  RESULTLIST: '__orkid:internals:results',
+  FAILEDLIST: '__orkid:internals:failed',
+  DEADLIST: '__orkid:internals:dead',
+  STAT: '__orkid:internals:stat',
+  QUENAMES: '__orkid:internals:qnames',
   redisOptions,
   queueOptions,
   consumerOptions,
