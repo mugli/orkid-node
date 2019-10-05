@@ -45,11 +45,12 @@ const loggingOptions: LoggingOptions = {
 
 export const defaultOptions = {
   NAMESPACE: '__orkid',
-  RESULTLIST: '__orkid:internals:results',
-  FAILEDLIST: '__orkid:internals:failed',
-  DEADLIST: '__orkid:internals:dead',
-  STAT: '__orkid:internals:stat',
-  QUENAMES: '__orkid:internals:qnames',
+  INTERNALS: '__internals',
+  RESULTLIST: '__orkid:__internals:results',
+  FAILEDLIST: '__orkid:__internals:failed',
+  DEADLIST: '__orkid:__internals:dead',
+  STAT: '__orkid:__internals:stat',
+  QUENAMES: '__orkid:__internals:qnames',
   redisOptions,
   queueOptions,
   consumerOptions,
