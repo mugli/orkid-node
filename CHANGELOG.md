@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. Dates are displayed in UTC.
 
+#### [v0.9.0](https://github.com/mugli/orkid/compare/v0.8.0...v0.9.0)
+
+> 6 October 2019
+
+- Save queue specific results and stats [`7d4fe45`](https://github.com/mugli/orkid/commit/7d4fe451eaea86e985d463bfa9e0c3ce2c2e380d)
+- Breaking change: update redis key namespace [`f85dccb`](https://github.com/mugli/orkid/commit/f85dccbd4280fc3d2c5149c6460a1cd4f3d9da81)
+- Breaking: change namespaces for orkid [`8057690`](https://github.com/mugli/orkid/commit/80576900e7129a5f434c84e56fc2458c25e6fee0)
+
 #### [v0.8.0](https://github.com/mugli/orkid/compare/v0.7.0...v0.8.0)
 
 > 4 October 2019
