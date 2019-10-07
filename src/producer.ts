@@ -15,6 +15,7 @@ export interface ProducerOptions {
 export class Producer {
   _redis: Redis;
   _QNAME: string;
+  qname: string;
   _DEDUPSET: string;
   _isInitialized: boolean = false;
   _redisOptions: IORedis.RedisOptions = defaultOptions.redisOptions;
@@ -43,6 +44,7 @@ export class Producer {
     }
 
     this._QNAME = `${defaultOptions.NAMESPACE}:queue:${qname}`;
+    this.qname = qname;
     this._DEDUPSET = `${defaultOptions.NAMESPACE}:queue:${qname}:dedupset`;
 
     this._initialize();
@@ -58,7 +60,7 @@ export class Producer {
     await waitUntilInitialized(this, '_isInitialized');
 
     // enqueue is our custom lua script to handle task de-duplication and adding to streams atomically
-    const retval = await this._redis.enqueue(this._QNAME, this._DEDUPSET, JSON.stringify(data), dedupKey, 0);
+    const retval = await this._redis.enqueue(this.qname, this._DEDUPSET, JSON.stringify(data), dedupKey, 0);
     return retval;
   }
 

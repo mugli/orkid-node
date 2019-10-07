@@ -66,24 +66,26 @@ export function initScripts(redis: IORedis.Redis) {
       local dedupKey = ARGV[3]
       local retryCount = ARGV[4]
 
+      local QNAMESPACE = "${defaultOptions.NAMESPACE}:queue:" .. QNAME
+
       local retval
 
       redis.call("SADD", "${defaultOptions.QUENAMES}", QNAME)
 
       if dedupKey == nil or dedupKey == '' then
-        retval = redis.call("XADD", QNAME, "*", "data", data, "dedupKey", dedupKey, "retryCount", retryCount)
+        retval = redis.call("XADD", QNAMESPACE, "*", "data", data, "dedupKey", dedupKey, "retryCount", retryCount)
       else
         local exists = redis.call("SISMEMBER", DEDUPSET, dedupKey)
         if exists == 0 then
           redis.call("SADD", DEDUPSET, dedupKey)
-          retval = redis.call("XADD", QNAME, "*", "data", data, "dedupKey", dedupKey, "retryCount", retryCount)
+          retval = redis.call("XADD", QNAMESPACE, "*", "data", data, "dedupKey", dedupKey, "retryCount", retryCount)
         else
           retval = nil
         end
       end
 
-      redis.call("XACK", QNAME, GRPNAME, taskId)
-      redis.call("XDEL", QNAME, taskId)
+      redis.call("XACK", QNAMESPACE, GRPNAME, taskId)
+      redis.call("XDEL", QNAMESPACE, taskId)
 
       return retval
       `
@@ -109,17 +111,19 @@ export function initScripts(redis: IORedis.Redis) {
       local dedupKey = ARGV[2]
       local retryCount = ARGV[3]
 
+      local QNAMESPACE = "${defaultOptions.NAMESPACE}:queue:" .. QNAME
+
       local retval
 
       redis.call("SADD", "${defaultOptions.QUENAMES}", QNAME)
 
       if dedupKey == nil or dedupKey == '' then
-        retval = redis.call("XADD", QNAME, "*", "data", data, "dedupKey", dedupKey, "retryCount", retryCount)
+        retval = redis.call("XADD", QNAMESPACE, "*", "data", data, "dedupKey", dedupKey, "retryCount", retryCount)
       else
         local exists = redis.call("SISMEMBER", DEDUPSET, dedupKey)
         if exists == 0 then
           redis.call("SADD", DEDUPSET, dedupKey)
-          retval = redis.call("XADD", QNAME, "*", "data", data, "dedupKey", dedupKey, "retryCount", retryCount)
+          retval = redis.call("XADD", QNAMESPACE, "*", "data", data, "dedupKey", dedupKey, "retryCount", retryCount)
         else
           retval = nil
         end
