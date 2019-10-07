@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. Dates are displayed in UTC.
 
+#### [v0.10.0](https://github.com/mugli/orkid/compare/v0.9.0...v0.10.0)
+
+> 7 October 2019
+
+- Breaking: change how queue names are stored internally [`6c98a0c`](https://github.com/mugli/orkid/commit/6c98a0c8ca0d2402dd6973e84511235ae2cf153a)
+- Update changelog [`16346c9`](https://github.com/mugli/orkid/commit/16346c927abaa56a5c7dbe55050cc9c1266b9775)
+
 #### [v0.9.0](https://github.com/mugli/orkid/compare/v0.8.0...v0.9.0)
 
 > 6 October 2019
