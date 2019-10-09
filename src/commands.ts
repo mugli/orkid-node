@@ -12,6 +12,8 @@ interface Pipeline extends IORedis.Pipeline {
     retryCount: number
   ): Pipeline;
   dequeue(qname: string, dedupSet: string, groupName: string, taskId: string, taskDedupkey: string): Pipeline;
+
+  enqueue(qname: string, dedupSet: string, data: string, dedupKey: string | null, retryCount: number): Pipeline;
 }
 
 export interface Redis extends IORedis.Redis {

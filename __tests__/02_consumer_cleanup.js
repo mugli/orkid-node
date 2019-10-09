@@ -18,21 +18,25 @@ describe('Consumer Unit - Cleanup', () => {
   });
 
   afterAll(async () => {
-    for (const producer of producers) {
-      await producer._disconnect();
-    }
-    for (const consumer of consumers) {
-      await consumer._disconnect();
-    }
+    try {
+      for (const producer of producers) {
+        await producer.disconnect();
+      }
+      for (const consumer of consumers) {
+        await consumer._disconnect();
+      }
 
-    await redis.flushall();
-    await redis.disconnect();
+      await redis.flushall();
+      await redis.disconnect();
+    } catch (e) {
+      console.error(e);
+    }
   });
 
   test('claim ownership of unfinished tasks from inactive consumers', async () => {
     const qname = `queue-test-${shortid.generate()}`;
 
-    const producer = new Producer(qname, { redisClient: redis });
+    const producer = new Producer(qname, {});
     producers.push(producer);
 
     for (let i = 0; i < 2; i++) {
@@ -49,8 +53,8 @@ describe('Consumer Unit - Cleanup', () => {
       enabled: false
     };
 
-    const faultyConsumer = new ConsumerUnit(qname, () => {}, { redisClient: redis, consumerOptions, loggingOptions });
-    const activeConsumer = new ConsumerUnit(qname, () => {}, { redisClient: redis, consumerOptions, loggingOptions });
+    const faultyConsumer = new ConsumerUnit(qname, () => {}, { consumerOptions, loggingOptions });
+    const activeConsumer = new ConsumerUnit(qname, () => {}, { consumerOptions, loggingOptions });
     consumers.push(activeConsumer);
 
     await waitUntilInitialized(faultyConsumer, '_isInitialized');
@@ -102,7 +106,7 @@ describe('Consumer Unit - Cleanup', () => {
   test('delete inactive and empty consumers', async () => {
     const qname = `queue-test-1`;
 
-    const producer = new Producer(qname, { redisClient: redis });
+    const producer = new Producer(qname, {});
     producers.push(producer);
 
     for (let i = 0; i < 2; i++) {
@@ -119,8 +123,8 @@ describe('Consumer Unit - Cleanup', () => {
       enabled: false
     };
 
-    const faultyConsumer = new ConsumerUnit(qname, () => {}, { redisClient: redis, consumerOptions, loggingOptions });
-    const activeConsumer = new ConsumerUnit(qname, () => {}, { redisClient: redis, consumerOptions, loggingOptions });
+    const faultyConsumer = new ConsumerUnit(qname, () => {}, { consumerOptions, loggingOptions });
+    const activeConsumer = new ConsumerUnit(qname, () => {}, { consumerOptions, loggingOptions });
     consumers.push(activeConsumer);
 
     await waitUntilInitialized(faultyConsumer, '_isInitialized');

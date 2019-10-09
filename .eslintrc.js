@@ -48,6 +48,7 @@ module.exports = {
     'lines-between-class-members': 0,
     '@typescript-eslint/ban-ts-ignore': 1,
     '@typescript-eslint/consistent-type-assertions': 1,
-    '@typescript-eslint/no-inferrable-types': 1
+    '@typescript-eslint/no-inferrable-types': 1,
+    '@typescript-eslint/no-empty-interface': 0
   }
 };

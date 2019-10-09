@@ -48,13 +48,6 @@ const producer = new Producer(qname, [options]);
 
 ```
 `options`: {
-  `redisClient`:
-
-    - Instance of `ioredis` which will be used to duplicate configs to create a new redis connection.
-    - `redisClient` is used over `redisOptions` if both are present.
-    - Optional.
-
-
   `redisOptions`:
 
     - Object.
@@ -63,7 +56,7 @@ const producer = new Producer(qname, [options]);
 }
 ```
 
-If `options` is omitted or `redisClient` and `redisOptions` are not present, `ioredis` defaults will be used, as described here: https://github.com/luin/ioredis/blob/master/API.md#new_Redis_new
+If `options` is omitted or `redisOptions` are not present, `ioredis` defaults will be used, as described here: https://github.com/luin/ioredis/blob/master/API.md#new_Redis_new
 
 **Return value:**
 

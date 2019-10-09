@@ -9,11 +9,10 @@ import { parseStreamResponse, parseXPendingResponse, StreamValue } from './redis
 import { Task } from './task';
 import { TimeoutError } from './errors';
 
-import { defaultOptions, LoggingOptions, ConsumerOptions } from './defaults';
+import { defaultOptions, LoggingOptions, ConsumerOptions, RedisOptions } from './defaults';
 
 export interface ConsumerUnitOptions {
-  redisOptions?: IORedis.RedisOptions;
-  redisClient?: IORedis.Redis;
+  redisOptions?: RedisOptions;
   loggingOptions?: LoggingOptions;
   consumerOptions?: ConsumerOptions;
 }
@@ -37,7 +36,7 @@ export class ConsumerUnit {
   consumerOptions: ConsumerOptions;
   loggingOptions: LoggingOptions;
   _redis: Redis;
-  redisOptions: IORedis.RedisOptions = defaultOptions.redisOptions;
+  redisOptions: RedisOptions = defaultOptions.redisOptions;
   _name: string = '';
   _isInitialized: boolean = false;
   _loopStarted: boolean = false;
@@ -45,7 +44,7 @@ export class ConsumerUnit {
   constructor(
     qname: string,
     workerFn: Function,
-    { consumerOptions, redisOptions, redisClient, loggingOptions }: ConsumerUnitOptions = {}
+    { consumerOptions, redisOptions, loggingOptions }: ConsumerUnitOptions = {}
   ) {
     this._paused = true;
 
@@ -61,12 +60,8 @@ export class ConsumerUnit {
     this.consumerOptions = lodash.merge({}, defaultOptions.consumerOptions, consumerOptions);
     this.loggingOptions = lodash.merge({}, defaultOptions.loggingOptions, loggingOptions);
 
-    if (redisClient) {
-      this._redis = redisClient.duplicate() as Redis;
-    } else {
-      this.redisOptions = lodash.merge({}, defaultOptions.redisOptions, redisOptions);
-      this._redis = new IORedis(this.redisOptions) as Redis;
-    }
+    this.redisOptions = lodash.merge({}, defaultOptions.redisOptions, redisOptions);
+    this._redis = new IORedis(this.redisOptions) as Redis;
 
     this._initialize();
   }

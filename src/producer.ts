@@ -4,40 +4,35 @@ import * as lodash from 'lodash';
 import { initScripts, Redis } from './commands';
 import { waitUntilInitialized } from './common';
 
-import { defaultOptions } from './defaults';
+import { defaultOptions, RedisOptions } from './defaults';
 
 export interface ProducerOptions {
-  redisClient?: IORedis.Redis;
+  redisOptions?: RedisOptions;
+}
 
-  redisOptions?: IORedis.RedisOptions;
+export interface Task {
+  data: any;
+  dedupKey: string | null;
 }
 
 export class Producer {
-  _redis: Redis;
+  _redis: Redis | null = null;
   _QNAME: string;
   qname: string;
   _DEDUPSET: string;
   _isInitialized: boolean = false;
-  _redisOptions: IORedis.RedisOptions = defaultOptions.redisOptions;
+  _redisOptions: RedisOptions = defaultOptions.redisOptions;
 
   /**
    * Create a new Producer for a queue
    * @param qname name of the queue.
    *
-   * @param options.redisClient Optional. redisClient is an instance of `ioredis`
-   *    which will be used to duplicate configs to create a new redis connection.
-   *
-   *    `options.redisClient` is used over `options.redisOptions` if both are present.
    *
    * @param options.redisOptions Optional. Any valid `ioredis` options.
    */
-  constructor(qname: string, { redisOptions, redisClient }: ProducerOptions = {}) {
-    if (redisClient) {
-      this._redis = redisClient.duplicate() as Redis;
-    } else {
-      this._redisOptions = lodash.merge({}, defaultOptions.redisOptions, redisOptions);
-      this._redis = new IORedis(this._redisOptions) as Redis;
-    }
+  constructor(qname: string, { redisOptions }: ProducerOptions = {}) {
+    this._redisOptions = lodash.merge({}, defaultOptions.redisOptions, redisOptions);
+    this._connect();
 
     if (!qname || qname === defaultOptions.INTERNALS) {
       throw new Error(`qname cannot be empty or set as "${defaultOptions.INTERNALS}"`);
@@ -51,20 +46,48 @@ export class Producer {
   }
 
   async _initialize() {
-    await initScripts(this._redis);
+    await initScripts(this._redis!);
 
     this._isInitialized = true;
   }
 
   async addTask(data = null, dedupKey: string | null = null) {
+    if (!this._redis) {
+      this._connect();
+    }
+
     await waitUntilInitialized(this, '_isInitialized');
 
     // enqueue is our custom lua script to handle task de-duplication and adding to streams atomically
-    const retval = await this._redis.enqueue(this.qname, this._DEDUPSET, JSON.stringify(data), dedupKey, 0);
+    const retval = await this._redis!.enqueue(this.qname, this._DEDUPSET, JSON.stringify(data), dedupKey, 0);
     return retval;
   }
 
-  async _disconnect() {
-    await this._redis.disconnect();
+  async bulkAddTasks(tasks: Task[], chunkSize: number = 100): Promise<void> {
+    if (!this._redis) {
+      this._connect();
+    }
+
+    const chunks = lodash.chunk(tasks, chunkSize);
+    for (const c of chunks) {
+      const pipeline = this._redis!.pipeline();
+
+      for (const t of c) {
+        pipeline.enqueue(this.qname, this._DEDUPSET, JSON.stringify(t.data), t.dedupKey, 0);
+      }
+
+      await pipeline.exec();
+    }
+  }
+
+  _connect() {
+    this._redis = new IORedis(this._redisOptions) as Redis;
+  }
+
+  async disconnect() {
+    if (this._redis) {
+      await this._redis.disconnect();
+      this._redis = null;
+    }
   }
 }

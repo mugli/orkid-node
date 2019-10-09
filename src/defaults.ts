@@ -2,7 +2,9 @@
 
 import * as IORedis from 'ioredis';
 
-const redisOptions: IORedis.RedisOptions = {};
+export interface RedisOptions extends IORedis.RedisOptions {}
+
+const redisOptions: RedisOptions = {};
 
 export interface QueueOptions {
   maxIndividualQueueResultSize?: number;

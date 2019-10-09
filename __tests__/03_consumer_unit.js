@@ -19,21 +19,25 @@ describe('Consumer Unit', () => {
   });
 
   afterAll(async () => {
-    for (const producer of producers) {
-      await producer._disconnect();
+    try {
+      for (const producer of producers) {
+        await producer.disconnect();
+      }
+      for (const consumer of consumers) {
+        await consumer._disconnect();
+      }
+      await redis.flushall();
+      await redis.disconnect();
+    } catch (e) {
+      console.error(e);
     }
-    for (const consumer of consumers) {
-      await consumer._disconnect();
-    }
-    await redis.flushall();
-    await redis.disconnect();
   });
 
   test('should process task', async done => {
     const taskData = `test-${shortid.generate()}`;
 
     const qname = `queue-${shortid.generate()}`;
-    const producer = new Producer(qname, { redisClient: redis });
+    const producer = new Producer(qname, {});
     producers.push(producer);
 
     const id = await producer.addTask(taskData);
@@ -45,7 +49,7 @@ describe('Consumer Unit', () => {
       done();
     }
 
-    const consumer = new ConsumerUnit(qname, workerFn, { redisClient: redis });
+    const consumer = new ConsumerUnit(qname, workerFn, {});
     consumers.push(consumer);
     consumer.start();
   });
@@ -54,7 +58,7 @@ describe('Consumer Unit', () => {
     const taskData = { name: `test-${shortid.generate()}`, nested: { arr: [1, 2, 3], nested: { arr: [1, 2, 3] } } };
 
     const qname = `queue-${shortid.generate()}`;
-    const producer = new Producer(qname, { redisClient: redis });
+    const producer = new Producer(qname, {});
     producers.push(producer);
 
     const id = await producer.addTask(taskData);
@@ -66,7 +70,7 @@ describe('Consumer Unit', () => {
       done();
     }
 
-    const consumer = new ConsumerUnit(qname, workerFn, { redisClient: redis });
+    const consumer = new ConsumerUnit(qname, workerFn, {});
     consumers.push(consumer);
     consumer.start();
   });
@@ -75,7 +79,7 @@ describe('Consumer Unit', () => {
     const taskData = `test-${shortid.generate()}`;
 
     const qname = `queue-${shortid.generate()}`;
-    const producer = new Producer(qname, { redisClient: redis });
+    const producer = new Producer(qname, {});
     producers.push(producer);
 
     const id = await producer.addTask(taskData);
@@ -97,7 +101,6 @@ describe('Consumer Unit', () => {
     }
 
     const consumer = new ConsumerUnit(qname, workerFn, {
-      redisClient: redis,
       consumerOptions: { maxRetry }
     });
     consumers.push(consumer);
@@ -108,7 +111,7 @@ describe('Consumer Unit', () => {
     const taskData = `test-${shortid.generate()}`;
 
     const qname = `queue-${shortid.generate()}`;
-    const producer = new Producer(qname, { redisClient: redis });
+    const producer = new Producer(qname, {});
     producers.push(producer);
 
     const id = await producer.addTask(taskData);
@@ -130,7 +133,6 @@ describe('Consumer Unit', () => {
     }
 
     const consumer = new ConsumerUnit(qname, workerFn, {
-      redisClient: redis,
       consumerOptions: { maxRetry, workerFnTimeoutMs: 10 }
     });
     consumers.push(consumer);
@@ -141,7 +143,7 @@ describe('Consumer Unit', () => {
     const taskData = `test-${shortid.generate()}`;
 
     const qname = `queue-${shortid.generate()}`;
-    const producer = new Producer(qname, { redisClient: redis });
+    const producer = new Producer(qname, {});
     producers.push(producer);
 
     const id = await producer.addTask(taskData);
@@ -158,7 +160,7 @@ describe('Consumer Unit', () => {
     // Clear the result list first
     await redis.del(defaults.RESULTLIST);
 
-    const consumer = new ConsumerUnit(qname, workerFn, { redisClient: redis });
+    const consumer = new ConsumerUnit(qname, workerFn, {});
     consumers.push(consumer);
     consumer.start();
 
@@ -180,7 +182,7 @@ describe('Consumer Unit', () => {
     const taskData = `test-${shortid.generate()}`;
 
     const qname = `queue-${shortid.generate()}`;
-    const producer = new Producer(qname, { redisClient: redis });
+    const producer = new Producer(qname, {});
     producers.push(producer);
 
     const id = await producer.addTask(taskData);
@@ -213,7 +215,7 @@ describe('Consumer Unit', () => {
     const taskData = `test-${shortid.generate()}`;
 
     const qname = `queue-${shortid.generate()}`;
-    const producer = new Producer(qname, { redisClient: redis });
+    const producer = new Producer(qname, {});
     producers.push(producer);
 
     await producer.addTask(taskData);
@@ -242,7 +244,6 @@ describe('Consumer Unit', () => {
     await redis.del(defaults.FAILEDLIST);
 
     const consumer = new ConsumerUnit(qname, workerFn, {
-      redisClient: redis,
       consumerOptions: { maxRetry }
     });
     consumers.push(consumer);
@@ -266,7 +267,7 @@ describe('Consumer Unit', () => {
     const taskData = `test-${shortid.generate()}`;
 
     const qname = `queue-${shortid.generate()}`;
-    const producer = new Producer(qname, { redisClient: redis });
+    const producer = new Producer(qname, {});
     producers.push(producer);
 
     await producer.addTask(taskData);
@@ -295,7 +296,6 @@ describe('Consumer Unit', () => {
     await redis.del(defaults.FAILEDLIST);
 
     const consumer = new ConsumerUnit(qname, workerFn, {
-      redisClient: redis,
       consumerOptions: { maxRetry }
     });
     consumers.push(consumer);

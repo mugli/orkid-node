@@ -16,11 +16,6 @@ export class Consumer {
    *
    * @param workerFn The function that will be called with data.
    *
-   * @param options.redisClient Optional. redisClient is an instance of `ioredis`
-   *    which will be used to duplicate configs to create a new redis connection.
-   *
-   *    `options.redisClient` is used over `options.redisOptions` if both are present.
-   *
    * @param options.redisOptions Optional. Any valid `ioredis` options.
    *
    * @param options.consumerOptions.concurrencyPerInstance Optional. Concurrency per instance of
