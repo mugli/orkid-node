@@ -8,17 +8,13 @@ const redisOptions: RedisOptions = {};
 
 export interface QueueOptions {
   maxIndividualQueueResultSize?: number;
-  maxResultListSize?: number;
-  maxFailedListSize?: number;
-  maxDeadListSize?: number;
+  maxGlobalListSize?: number;
 }
 
 const queueOptions: QueueOptions = {
   // Currently there is no API to override these defaults
   maxIndividualQueueResultSize: 10_000,
-  maxResultListSize: 100_000,
-  maxFailedListSize: 100_000,
-  maxDeadListSize: 100_000
+  maxGlobalListSize: 100_000
 };
 
 export interface ConsumerOptions {

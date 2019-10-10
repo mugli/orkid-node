@@ -14,13 +14,13 @@ describe('Producer', () => {
   });
 
   afterAll(async () => {
-    try {
-      await producer.disconnect();
-      await redis.flushall();
-      await redis.disconnect();
-    } catch (e) {
-      console.error(e);
-    }
+    // try {
+    //   await producer.disconnect();
+    //   await redis.flushall();
+    //   await redis.disconnect();
+    // } catch (e) {
+    //   console.error(e);
+    // }
   });
 
   test('should create task', async () => {

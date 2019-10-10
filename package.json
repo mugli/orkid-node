@@ -7,7 +7,6 @@
   "scripts": {
     "test": "npm run ts:js && NODE_ENV=test jest --colors --coverage --runInBand --forceExit --detectOpenHandles --testSequencer ./jest.customsequencer.js",
     "test:badges": "npm run test && jest-coverage-badges output './badges'",
-    "test:dev": "npm run ts:js && NODE_ENV=test jest --colors --coverage --runInBand --detectOpenHandles --testSequencer ./jest.customsequencer.js",
     "upload_coverage": "codecov",
     "lint": "eslint '**/*.{js,ts}'",
     "prettier": "prettier --write '**/*.{ts,js}'",

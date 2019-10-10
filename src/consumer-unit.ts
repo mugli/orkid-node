@@ -361,15 +361,19 @@ export class ConsumerUnit {
     // Add to success list
     await this._redis
       .pipeline()
+
       .dequeue(this._QNAME, this._DEDUPSET, this._GRPNAME, task.id, task.dedupKey) // Remove from queue
-      .lpush(defaultOptions.RESULTLIST, resultVal)
-      .ltrim(defaultOptions.RESULTLIST, 0, <number>defaultOptions.queueOptions.maxResultListSize - 1)
-      .lpush(`${defaultOptions.RESULTLIST}:${this.qname}`, resultVal)
-      .ltrim(
+
+      .zadd(defaultOptions.RESULTLIST, new Date().getTime().toString(), resultVal)
+      .zremrangebyrank(defaultOptions.RESULTLIST, 0, defaultOptions.queueOptions.maxGlobalListSize! * -1)
+
+      .zadd(`${defaultOptions.RESULTLIST}:${this.qname}`, new Date().getTime().toString(), resultVal)
+      .zremrangebyrank(
         `${defaultOptions.RESULTLIST}:${this.qname}`,
         0,
-        <number>defaultOptions.queueOptions.maxIndividualQueueResultSize - 1
+        defaultOptions.queueOptions.maxIndividualQueueResultSize! * -1
       )
+
       .exec();
   }
 
@@ -393,41 +397,53 @@ export class ConsumerUnit {
       // Send again to the queue
       await this._redis
         .pipeline()
+
         .requeue(this.qname, this._DEDUPSET, this._GRPNAME, task.id, task.dataString, task.dedupKey, task.retryCount)
+
         .hincrby(defaultOptions.STAT, 'retries', 1)
         .hincrby(`${defaultOptions.STAT}:${this.qname}`, 'retries', 1)
+
         .exec();
     } else {
       // Move to deadlist
       await this._redis
         .pipeline()
+
         .dequeue(this._QNAME, this._DEDUPSET, this._GRPNAME, task.id, task.dedupKey) // Remove from queue
-        .lpush(defaultOptions.DEADLIST, info)
-        .ltrim(defaultOptions.DEADLIST, 0, <number>defaultOptions.queueOptions.maxDeadListSize - 1)
-        .lpush(`${defaultOptions.DEADLIST}:${this.qname}`, info)
-        .ltrim(
+
+        .zadd(defaultOptions.DEADLIST, new Date().getTime().toString(), info)
+        .zremrangebyrank(defaultOptions.DEADLIST, 0, defaultOptions.queueOptions.maxGlobalListSize! * -1)
+
+        .zadd(`${defaultOptions.DEADLIST}:${this.qname}`, new Date().getTime().toString(), info)
+        .zremrangebyrank(
           `${defaultOptions.DEADLIST}:${this.qname}`,
           0,
-          <number>defaultOptions.queueOptions.maxIndividualQueueResultSize - 1
+          defaultOptions.queueOptions.maxIndividualQueueResultSize! * -1
         )
+
         .hincrby(defaultOptions.STAT, 'dead', 1)
         .hincrby(`${defaultOptions.STAT}:${this.qname}`, 'dead', 1)
+
         .exec();
     }
 
     // Add to failed list in all cases
     await this._redis
       .pipeline()
-      .lpush(defaultOptions.FAILEDLIST, info)
-      .ltrim(defaultOptions.FAILEDLIST, 0, <number>defaultOptions.queueOptions.maxFailedListSize - 1)
-      .lpush(`${defaultOptions.FAILEDLIST}:${this.qname}`, info)
-      .ltrim(
+
+      .zadd(defaultOptions.FAILEDLIST, new Date().getTime().toString(), info)
+      .zremrangebyrank(defaultOptions.FAILEDLIST, 0, defaultOptions.queueOptions.maxGlobalListSize! * -1)
+
+      .zadd(`${defaultOptions.FAILEDLIST}:${this.qname}`, new Date().getTime().toString(), info)
+      .zremrangebyrank(
         `${defaultOptions.FAILEDLIST}:${this.qname}`,
         0,
-        <number>defaultOptions.queueOptions.maxIndividualQueueResultSize - 1
+        defaultOptions.queueOptions.maxIndividualQueueResultSize! * -1
       )
+
       .hincrby(defaultOptions.STAT, 'failed', 1)
       .hincrby(`${defaultOptions.STAT}:${this.qname}`, 'failed', 1)
+
       .exec();
   }
 

@@ -19,18 +19,18 @@ describe('Consumer Unit', () => {
   });
 
   afterAll(async () => {
-    try {
-      for (const producer of producers) {
-        await producer.disconnect();
-      }
-      for (const consumer of consumers) {
-        await consumer._disconnect();
-      }
-      await redis.flushall();
-      await redis.disconnect();
-    } catch (e) {
-      console.error(e);
-    }
+    // try {
+    //   for (const producer of producers) {
+    //     await producer.disconnect();
+    //   }
+    //   for (const consumer of consumers) {
+    //     await consumer._disconnect();
+    //   }
+    //   await redis.flushall();
+    //   await redis.disconnect();
+    // } catch (e) {
+    //   console.error(e);
+    // }
   });
 
   test('should process task', async done => {
@@ -139,7 +139,7 @@ describe('Consumer Unit', () => {
     consumer.start();
   });
 
-  test('should add to result list on success', async () => {
+  test('should add to global result list on success', async () => {
     const taskData = `test-${shortid.generate()}`;
 
     const qname = `queue-${shortid.generate()}`;
@@ -164,8 +164,8 @@ describe('Consumer Unit', () => {
     consumers.push(consumer);
     consumer.start();
 
-    await delay(100); // TODO: Replace flaky time based awaits using event-emitter in future
-    const passed = JSON.parse(await redis.lpop(defaults.RESULTLIST));
+    await delay(200); // TODO: Replace flaky time based awaits using event-emitter in future
+    const passed = JSON.parse((await redis.zpopmax(defaults.RESULTLIST))[0]);
 
     expect(passed).toMatchObject({
       id,
@@ -178,7 +178,46 @@ describe('Consumer Unit', () => {
     expect(new Date(passed.at).getTime()).toBeGreaterThan(startTime.getTime());
   });
 
-  test('should add to failed list on failure', async () => {
+  test('should add to queue specific result list on success', async () => {
+    const taskData = `test-${shortid.generate()}`;
+
+    const qname = `queue-${shortid.generate()}`;
+    const producer = new Producer(qname, {});
+    producers.push(producer);
+
+    const id = await producer.addTask(taskData);
+    const startTime = new Date();
+    const result = { mykey: 'passed with flying colors!' };
+
+    function workerFn(data, metadata) {
+      expect(data).toBe(taskData);
+
+      expect(metadata).toMatchObject({ id, qname });
+      return result;
+    }
+
+    // Clear the result list first
+    await redis.del(`${defaults.RESULTLIST}:${qname}`);
+
+    const consumer = new ConsumerUnit(qname, workerFn, {});
+    consumers.push(consumer);
+    consumer.start();
+
+    await delay(200); // TODO: Replace flaky time based awaits using event-emitter in future
+    const passed = JSON.parse((await redis.zpopmax(`${defaults.RESULTLIST}:${qname}`))[0]);
+
+    expect(passed).toMatchObject({
+      id,
+      qname,
+      data: taskData,
+      dedupKey: '',
+      retryCount: 0,
+      result
+    });
+    expect(new Date(passed.at).getTime()).toBeGreaterThan(startTime.getTime());
+  });
+
+  test('should add to global failed list on failure', async () => {
     const taskData = `test-${shortid.generate()}`;
 
     const qname = `queue-${shortid.generate()}`;
@@ -202,8 +241,8 @@ describe('Consumer Unit', () => {
     consumers.push(consumer);
     consumer.start();
 
-    await delay(100); // TODO: Replace flaky time based awaits using event-emitter in future
-    const failed = JSON.parse(await redis.lpop(defaults.FAILEDLIST));
+    await delay(200); // TODO: Replace flaky time based awaits using event-emitter in future
+    const failed = JSON.parse((await redis.zpopmax(defaults.FAILEDLIST))[0]);
     const { error } = failed;
     expect(failed).toMatchObject({ id, qname, data: taskData, dedupKey: '', retryCount: 0 });
     expect(new Date(failed.at).getTime()).toBeGreaterThan(startTime.getTime());
@@ -211,7 +250,40 @@ describe('Consumer Unit', () => {
     expect(error.stack).not.toBeFalsy();
   });
 
-  test('should add to failed list for all failures and retries', async () => {
+  test('should add to queue specific failed list on failure', async () => {
+    const taskData = `test-${shortid.generate()}`;
+
+    const qname = `queue-${shortid.generate()}`;
+    const producer = new Producer(qname, {});
+    producers.push(producer);
+
+    const id = await producer.addTask(taskData);
+    const startTime = new Date();
+
+    function workerFn(data, metadata) {
+      expect(data).toBe(taskData);
+
+      expect(metadata).toMatchObject({ id, qname });
+      throw new Error('Failed here!');
+    }
+
+    // Clear the failed list first
+    await redis.del(`${defaults.FAILEDLIST}:${qname}`);
+
+    const consumer = new ConsumerUnit(qname, workerFn, { redisClient: redis });
+    consumers.push(consumer);
+    consumer.start();
+
+    await delay(200); // TODO: Replace flaky time based awaits using event-emitter in future
+    const failed = JSON.parse((await redis.zpopmax(`${defaults.FAILEDLIST}:${qname}`))[0]);
+    const { error } = failed;
+    expect(failed).toMatchObject({ id, qname, data: taskData, dedupKey: '', retryCount: 0 });
+    expect(new Date(failed.at).getTime()).toBeGreaterThan(startTime.getTime());
+    expect(error).toMatchObject({ name: 'Error', message: 'Failed here!' });
+    expect(error.stack).not.toBeFalsy();
+  });
+
+  test('should add to global failed list for all failures and retries', async () => {
     const taskData = `test-${shortid.generate()}`;
 
     const qname = `queue-${shortid.generate()}`;
@@ -225,15 +297,15 @@ describe('Consumer Unit', () => {
     async function workerFn(data, metadata) {
       expect(data).toBe(taskData);
 
-      const failListCount = await redis.llen(defaults.FAILEDLIST);
+      const failListCount = await redis.zcard(defaults.FAILEDLIST);
       expect(failListCount).toBe(metadata.retryCount);
 
       if (metadata.retryCount <= maxRetry) {
         expect(metadata).toMatchObject({ qname });
 
         // Dead list should be empty until we reach maxRetry
-        const dead = await redis.lpop(defaults.DEADLIST);
-        expect(dead).toBe(null);
+        const dead = await redis.zpopmax(defaults.DEADLIST);
+        expect(dead.length).toBe(0);
 
         throw new Error('Task failed');
       }
@@ -252,18 +324,18 @@ describe('Consumer Unit', () => {
     await delay(300); // TODO: Replace flaky time based awaits using event-emitter in future
 
     // Check failed list
-    const failedList = (await redis.lrange(defaults.FAILEDLIST, 0, -1)).map(item => JSON.parse(item));
+    const failedList = (await redis.zrange(defaults.FAILEDLIST, 0, -1)).map(item => JSON.parse(item));
     expect(failedList.length).toBe(maxRetry + 1);
     for (const [i, failed] of failedList.entries()) {
       const { error } = failed;
-      expect(failed).toMatchObject({ qname, data: taskData, dedupKey: '', retryCount: maxRetry - i });
+      expect(failed).toMatchObject({ qname, data: taskData, dedupKey: '', retryCount: i });
       expect(new Date(failed.at).getTime()).toBeGreaterThan(startTime.getTime());
       expect(error).toMatchObject({ name: 'Error', message: 'Task failed' });
       expect(error.stack).not.toBeFalsy();
     }
   });
 
-  test('should add to dead list after failure only after all retries', async () => {
+  test('should add to queue specific failed list for all failures and retries', async () => {
     const taskData = `test-${shortid.generate()}`;
 
     const qname = `queue-${shortid.generate()}`;
@@ -277,15 +349,67 @@ describe('Consumer Unit', () => {
     async function workerFn(data, metadata) {
       expect(data).toBe(taskData);
 
-      const failListCount = await redis.llen(defaults.FAILEDLIST);
+      const failListCount = await redis.zcard(`${defaults.FAILEDLIST}:${qname}`);
       expect(failListCount).toBe(metadata.retryCount);
 
       if (metadata.retryCount <= maxRetry) {
         expect(metadata).toMatchObject({ qname });
 
         // Dead list should be empty until we reach maxRetry
-        const dead = await redis.lpop(defaults.DEADLIST);
-        expect(dead).toBe(null);
+        const dead = await redis.zpopmax(`${defaults.DEADLIST}:${qname}`);
+        expect(dead.length).toBe(0);
+
+        throw new Error('Task failed');
+      }
+    }
+
+    // Clear the lists first
+    await redis.del(`${defaults.DEADLIST}:${qname}`);
+    await redis.del(`${defaults.FAILEDLIST}:${qname}`);
+
+    const consumer = new ConsumerUnit(qname, workerFn, {
+      consumerOptions: { maxRetry }
+    });
+    consumers.push(consumer);
+    consumer.start();
+
+    await delay(300); // TODO: Replace flaky time based awaits using event-emitter in future
+
+    // Check failed list
+    const failedList = (await redis.zrange(`${defaults.FAILEDLIST}:${qname}`, 0, -1)).map(item => JSON.parse(item));
+    expect(failedList.length).toBe(maxRetry + 1);
+    for (const [i, failed] of failedList.entries()) {
+      const { error } = failed;
+      expect(failed).toMatchObject({ qname, data: taskData, dedupKey: '', retryCount: i });
+      expect(new Date(failed.at).getTime()).toBeGreaterThan(startTime.getTime());
+      expect(error).toMatchObject({ name: 'Error', message: 'Task failed' });
+      expect(error.stack).not.toBeFalsy();
+    }
+  });
+
+  test('should add to global dead list after failure only after all retries', async () => {
+    const taskData = `test-${shortid.generate()}`;
+
+    const qname = `queue-${shortid.generate()}`;
+    const producer = new Producer(qname, {});
+    producers.push(producer);
+
+    await producer.addTask(taskData);
+    const startTime = new Date();
+    const maxRetry = 2;
+
+    async function workerFn(data, metadata) {
+      expect(data).toBe(taskData);
+
+      const failListCount = await redis.zcard(defaults.FAILEDLIST);
+      expect(failListCount).toBe(metadata.retryCount);
+
+      if (metadata.retryCount <= maxRetry) {
+        expect(metadata).toMatchObject({ qname });
+
+        // Dead list should be empty until we reach maxRetry
+        const dead = await redis.zpopmax(defaults.DEADLIST);
+        expect(dead.length).toBe(0);
 
         throw new Error('Threw this!');
       }
@@ -304,7 +428,56 @@ describe('Consumer Unit', () => {
     await delay(300); // TODO: Replace flaky time based awaits using event-emitter in future
 
     // Check dead list
-    const dead = JSON.parse(await redis.lpop(defaults.DEADLIST));
+    const dead = JSON.parse((await redis.zpopmax(defaults.DEADLIST))[0]);
+    const { error } = dead;
+    expect(dead).toMatchObject({ qname, data: taskData, dedupKey: '', retryCount: maxRetry });
+    expect(new Date(dead.at).getTime()).toBeGreaterThan(startTime.getTime());
+    expect(error).toMatchObject({ name: 'Error', message: 'Threw this!' });
+    expect(error.stack).not.toBeFalsy();
+  });
+
+  test('should add to queue specific dead list after failure only after all retries', async () => {
+    const taskData = `test-${shortid.generate()}`;
+
+    const qname = `queue-${shortid.generate()}`;
+    const producer = new Producer(qname, {});
+    producers.push(producer);
+
+    await producer.addTask(taskData);
+    const startTime = new Date();
+    const maxRetry = 2;
+
+    async function workerFn(data, metadata) {
+      expect(data).toBe(taskData);
+
+      const failListCount = await redis.zcard(`${defaults.FAILEDLIST}:${qname}`);
+      expect(failListCount).toBe(metadata.retryCount);
+
+      if (metadata.retryCount <= maxRetry) {
+        expect(metadata).toMatchObject({ qname });
+
+        // Dead list should be empty until we reach maxRetry
+        const dead = await redis.zpopmax(defaults.DEADLIST);
+        expect(dead.length).toBe(0);
+
+        throw new Error('Threw this!');
+      }
+    }
+
+    // Clear the lists first
+    await redis.del(`${defaults.DEADLIST}:${qname}`);
+    await redis.del(`${defaults.FAILEDLIST}:${qname}`);
+
+    const consumer = new ConsumerUnit(qname, workerFn, {
+      consumerOptions: { maxRetry }
+    });
+    consumers.push(consumer);
+    consumer.start();
+
+    await delay(300); // TODO: Replace flaky time based awaits using event-emitter in future
+
+    // Check dead list
+    const dead = JSON.parse((await redis.zpopmax(`${defaults.DEADLIST}:${qname}`))[0]);
     const { error } = dead;
     expect(dead).toMatchObject({ qname, data: taskData, dedupKey: '', retryCount: maxRetry });
     expect(new Date(dead.at).getTime()).toBeGreaterThan(startTime.getTime());
