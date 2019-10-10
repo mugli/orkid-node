@@ -51,7 +51,7 @@ export class Producer {
     this._isInitialized = true;
   }
 
-  async addTask(data = null, dedupKey: string | null = null) {
+  async addTask(data = null, dedupKey: string | null = null): Promise<string | null> {
     if (!this._redis) {
       this._connect();
     }
@@ -63,12 +63,17 @@ export class Producer {
     return retval;
   }
 
-  async bulkAddTasks(tasks: Task[], chunkSize: number = 100): Promise<void> {
+  _flatDeep(arr: any[]): any[] {
+    return arr.reduce((acc, val) => acc.concat(Array.isArray(val) ? this._flatDeep(val) : val), []);
+  }
+
+  async bulkAddTasks(tasks: Task[], chunkSize: number = 100): Promise<string[]> {
     if (!this._redis) {
       this._connect();
     }
 
     const chunks = lodash.chunk(tasks, chunkSize);
+    let result = [];
     for (const c of chunks) {
       const pipeline = this._redis!.pipeline();
 
@@ -76,8 +81,13 @@ export class Producer {
         pipeline.enqueue(this.qname, this._DEDUPSET, JSON.stringify(t.data), t.dedupKey, 0);
       }
 
-      await pipeline.exec();
+      const retval = await pipeline.exec();
+      result.push(retval);
     }
+
+    result = this._flatDeep(result).filter(i => !!i);
+
+    return result;
   }
 
   _connect() {
