@@ -155,18 +155,18 @@ consumer.start();
 
 <details>
   <summary>Is this production ready?</summary>
-  This project is under active development right now. API may introduce breaking changes until we reach version 1.0. After that semantic versioning will be followed.
+  This project is under active development right now. API WILL introduce breaking changes until we reach version 1.0. After that semantic versioning will be followed.
 </details>
 
 <p></p>
 
 <details>
   <summary>Why a new job queue for Node.js?</summary>
-  All the redis-based solutions were created before [Redis-Streams](https://redis.io/topics/streams-intro) became available. They all require a lot of work on the queue-side to ensure durability and atomicity of jobs. Redis-Streams was specifically designed to made this kind of tasks easier, thus allows simpler core in the queue and more reliable operations.
-
-None of existing usable job queues in Node.js offers a monitoring option that we liked.
-
-None of the existing usable task queues support task de-duplication.
+  - All the redis-based solutions were created before Redis-Streams (https://redis.io/topics/streams-intro) became available. They all require a lot of work on the queue-side to ensure durability and atomicity of jobs handling operations. Redis-Streams was specifically designed to made this kind of tasks easier, thus allows simpler core in the queue and more reliable and maintainable operations.
+<br/>
+- None of existing usable job queues in Node.js offers a monitoring option that we liked.
+<br/>
+- None of the existing usable task queues support task de-duplication.
 
 </details>
 
@@ -175,7 +175,7 @@ None of the existing usable task queues support task de-duplication.
 <details>
   <summary>How do I set priority in the tasks?</summary>
   Redis-Streams isn't a right primitive to make a priority queue efficiently on top of it. Orkid doesn't support priority queues now and probably never will.
-
+<br/>
 However, as a workaround, you can create a separate queue, keep its workload minimal and use it for high priority jobs with Orkid.
 
 </details>
@@ -184,7 +184,7 @@ However, as a workaround, you can create a separate queue, keep its workload min
 
 <details>
   <summary>What is the order of job/task delivery?</summary>
-  Jobs are processed in the order they are produced. However, if retry option is turned on and is applicable, failed jobs gets enqueued to the queue at once, along with other newly produced jobs. 
+  Jobs are processed in the order they are produced. However, if retry option is turned on and is applicable, failed jobs gets enqueued to the queue at once, along with other newly produced jobs.
 </details>
 
 <p></p>
