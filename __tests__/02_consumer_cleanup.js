@@ -45,7 +45,7 @@ describe('Consumer Unit - Cleanup', () => {
 
     const consumerOptions = {
       taskBufferSize: 1,
-      workerFnTimeoutMs: 10
+      stealFromInactiveConsumersAfterMs: 10
     };
 
     const loggingOptions = {
@@ -85,9 +85,9 @@ describe('Consumer Unit - Cleanup', () => {
     expect(cleanupInfo.pendingConsumerNames).toEqual(expect.not.arrayContaining([activeConsumerName]));
 
     // emptyConsumerNames should not contain faultyConsumerName since that's been disconnected before processing any task
-    expect(cleanupInfo.emptyConsumerNames).toEqual(expect.not.arrayContaining([faultyConsumerName]));
+    expect(cleanupInfo.emptyIdleConsumerNames).toEqual(expect.not.arrayContaining([faultyConsumerName]));
     // emptyConsumerNames should have activeConsumerName since we processed the task
-    expect(cleanupInfo.emptyConsumerNames).toEqual(expect.arrayContaining([activeConsumerName]));
+    expect(cleanupInfo.emptyIdleConsumerNames).toEqual(expect.arrayContaining([activeConsumerName]));
 
     // orphanWorkers should have faultyConsumerName since that's disconnected
     expect(cleanupInfo.orphanWorkers).toEqual(expect.arrayContaining([faultyConsumerName]));
@@ -115,7 +115,7 @@ describe('Consumer Unit - Cleanup', () => {
 
     const consumerOptions = {
       taskBufferSize: 1,
-      workerFnTimeoutMs: 5
+      stealFromInactiveConsumersAfterMs: 5
     };
 
     const loggingOptions = {
@@ -146,19 +146,19 @@ describe('Consumer Unit - Cleanup', () => {
     // First cleanup, take the task from faultyConsumer
     const cleanupInfo1 = await activeConsumer._cleanUp();
 
-    // Wait for a while (min: workerFnTimeoutMs * 5) so that orkid consumer deletes orphanEmptyWorkers
+    // Wait for a while so that orkid consumer deletes orphanEmptyWorkers
     await delay(100);
 
     // Second cleanup, this time delete  faultyConsumer
     const cleanupInfo2 = await activeConsumer._cleanUp();
 
     // faultyConsumer should not be deleted at first cleanup since it's too soon
-    expect(cleanupInfo1.emptyConsumerNames).toEqual(expect.not.arrayContaining([faultyConsumerName]));
+    expect(cleanupInfo1.emptyIdleConsumerNames).toEqual(expect.not.arrayContaining([faultyConsumerName]));
     expect(cleanupInfo1.deleteInfo).toEqual(expect.not.arrayContaining([faultyConsumerName]));
     expect(cleanupInfo1.orphanEmptyWorkers).toEqual(expect.not.arrayContaining([faultyConsumerName]));
 
     // faultyConsumer should not be deleted at second cleanup
-    expect(cleanupInfo2.emptyConsumerNames).toEqual([faultyConsumerName]);
+    expect(cleanupInfo2.emptyIdleConsumerNames).toEqual([faultyConsumerName]);
     expect(cleanupInfo2.deleteInfo).toEqual([faultyConsumerName]);
     expect(cleanupInfo2.orphanEmptyWorkers).toEqual([faultyConsumerName]);
   });

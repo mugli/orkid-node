@@ -203,15 +203,15 @@ export class ConsumerUnit {
 
     const consumerNames = Object.keys(consumerInfo);
     const pendingConsumerNames: Set<string> = new Set();
-    const emptyConsumerNames: Set<string> = new Set();
+    const emptyIdleConsumerNames: Set<string> = new Set();
 
     // Separate consumers with some pending tasks and no pending tasks
     for (const con of consumerNames) {
       if (consumerInfo[con].pending) {
         pendingConsumerNames.add(con);
-      } else if (consumerInfo[con].idle > <number>this.consumerOptions.workerFnTimeoutMs * 5) {
+      } else if (consumerInfo[con].idle > <number>this.consumerOptions.stealFromInactiveConsumersAfterMs * 2) {
         // Just to be safe, only delete really old consumers
-        emptyConsumerNames.add(con);
+        emptyIdleConsumerNames.add(con);
       }
     }
 
@@ -237,7 +237,7 @@ export class ConsumerUnit {
     const orphanWorkers = difference(pendingConsumerNames, activeWorkers);
 
     // Workers that have not pending tasks and also  are not active anymore in redis
-    const orphanEmptyWorkers = difference(emptyConsumerNames, activeWorkers);
+    const orphanEmptyWorkers = difference(emptyIdleConsumerNames, activeWorkers);
 
     const claimInfo: Record<string, number> = {};
     for (const w of orphanWorkers) {
@@ -256,7 +256,7 @@ export class ConsumerUnit {
           this._QNAME,
           this._GRPNAME,
           this._name,
-          <number>this.consumerOptions.workerFnTimeoutMs * 2,
+          <number>this.consumerOptions.stealFromInactiveConsumersAfterMs,
           ...ids,
           'JUSTID'
         )
@@ -279,7 +279,7 @@ export class ConsumerUnit {
     const retval = {
       consumerNames,
       pendingConsumerNames: Array.from(pendingConsumerNames),
-      emptyConsumerNames: Array.from(emptyConsumerNames),
+      emptyIdleConsumerNames: Array.from(emptyIdleConsumerNames),
       activeWorkers: Array.from(activeWorkers),
       orphanWorkers: Array.from(orphanWorkers),
       orphanEmptyWorkers: Array.from(orphanEmptyWorkers),
@@ -448,17 +448,22 @@ export class ConsumerUnit {
   }
 
   _wrapWorkerFn(data: any, metadata: Metadata) {
-    const timeoutMs = this.consumerOptions.workerFnTimeoutMs as number;
-    const timeoutP = new Promise((_, reject) => {
-      const to = setTimeout(() => {
-        clearTimeout(to);
-        reject(new TimeoutError(`Task timed out after ${timeoutMs}ms`));
-      }, timeoutMs);
-    });
+    const timeoutMs = this.consumerOptions.workerFnTimeoutMs;
 
     const workerP = this.workerFn(data, metadata);
 
-    return Promise.race([timeoutP, workerP]);
+    if (timeoutMs) {
+      const timeoutP = new Promise((_, reject) => {
+        const to = setTimeout(() => {
+          clearTimeout(to);
+          reject(new TimeoutError(`Task timed out after ${timeoutMs}ms`));
+        }, timeoutMs);
+      });
+
+      return Promise.race([timeoutP, workerP]);
+    }
+
+    return workerP;
   }
 
   async _disconnect() {

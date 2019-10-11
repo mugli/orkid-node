@@ -107,7 +107,7 @@ describe('Consumer Unit', () => {
     consumer.start();
   });
 
-  test('should retry task on timeout', async done => {
+  test('should throw and then retry task on timeout', async done => {
     const taskData = `test-${shortid.generate()}`;
 
     const qname = `queue-${shortid.generate()}`;

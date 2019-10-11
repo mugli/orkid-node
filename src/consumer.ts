@@ -27,8 +27,9 @@ export class Consumer {
    *    Default: 0, means it will not retry after failure/timeout and move the task to dead list.
    *
    * @param options.consumerOptions.workerFnTimeoutMs Optional. Maximum amount of time a workerFn is allowed to run
-   *    before throwing TimeoutError. Applicable to per instance of Consumer class.
-   *    Default: 24 hours converted to milliseconds.
+   *    before throwing TimeoutError. Applicable to per instance of Consumer class. Does not throw TimeoutError
+   *    if value is not set.
+   *    Default: null
    */
   constructor(qname: string, workerFn: Function, options: ConsumerUnitOptions = {}) {
     this.consumerOptions = lodash.merge({}, defaultOptions.consumerOptions, options.consumerOptions);

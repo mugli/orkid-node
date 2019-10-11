@@ -18,14 +18,16 @@ const queueOptions: QueueOptions = {
 };
 
 export interface ConsumerOptions {
-  workerFnTimeoutMs?: number;
+  workerFnTimeoutMs?: number | null;
+  stealFromInactiveConsumersAfterMs?: number;
   taskBufferSize?: number;
   maxRetry?: number;
   concurrencyPerInstance?: number;
 }
 
 const consumerOptions: ConsumerOptions = {
-  workerFnTimeoutMs: 24 * 60 * 60 * 1000,
+  workerFnTimeoutMs: null,
+  stealFromInactiveConsumersAfterMs: 300 * 1000, // 5 mins. Only tasks from inactive workers will be taken over.
   taskBufferSize: 10,
   maxRetry: 0,
   concurrencyPerInstance: 1
