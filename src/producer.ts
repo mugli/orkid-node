@@ -12,7 +12,7 @@ export interface ProducerOptions {
 
 export interface Task {
   data: any;
-  dedupKey: string | null;
+  dedupKey?: string | null;
 }
 
 export class Producer {
@@ -78,7 +78,7 @@ export class Producer {
       const pipeline = this._redis!.pipeline();
 
       for (const t of c) {
-        pipeline.enqueue(this.qname, this._DEDUPSET, JSON.stringify(t.data), t.dedupKey, 0);
+        pipeline.enqueue(this.qname, this._DEDUPSET, JSON.stringify(t.data || null), t.dedupKey || null, 0);
       }
 
       const retval = await pipeline.exec();

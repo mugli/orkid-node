@@ -2,6 +2,9 @@ const { Consumer } = require('orkid');
 
 const delay = time => new Promise(res => setTimeout(() => res(), time));
 
+// Note: Setting workerFnTimeoutMs in consumerOptions is totally optional.
+// The default behavior is to let workers run for as long as they need.
+
 async function worker(data, metadata) {
   console.log(`Processing task from Queue: ${metadata.qname}. Task ID: ${metadata.id}. Data:`, data);
 
@@ -28,4 +31,5 @@ async function worker(data, metadata) {
 const consumer = new Consumer('retriable-queue', worker, {
   consumerOptions: { concurrencyPerInstance: 1, maxRetry: 1, workerFnTimeoutMs: 3000 }
 });
+
 consumer.start();
