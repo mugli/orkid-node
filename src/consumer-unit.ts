@@ -37,9 +37,9 @@ export class ConsumerUnit {
   loggingOptions: LoggingOptions;
   _redis: Redis;
   redisOptions: RedisOptions = defaultOptions.redisOptions;
-  _name: string = '';
-  _isInitialized: boolean = false;
-  _loopStarted: boolean = false;
+  _name = '';
+  _isInitialized = false;
+  _loopStarted = false;
 
   constructor(
     qname: string,

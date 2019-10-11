@@ -20,7 +20,7 @@ export class Producer {
   _QNAME: string;
   qname: string;
   _DEDUPSET: string;
-  _isInitialized: boolean = false;
+  _isInitialized = false;
   _redisOptions: RedisOptions = defaultOptions.redisOptions;
 
   /**
@@ -67,7 +67,7 @@ export class Producer {
     return arr.reduce((acc, val) => acc.concat(Array.isArray(val) ? this._flatDeep(val) : val), []);
   }
 
-  async bulkAddTasks(tasks: Task[], chunkSize: number = 100): Promise<string[]> {
+  async bulkAddTasks(tasks: Task[], chunkSize = 100): Promise<string[]> {
     if (!this._redis) {
       this._connect();
     }
