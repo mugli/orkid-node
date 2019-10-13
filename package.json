@@ -35,7 +35,7 @@
     "node": ">=10.0.0"
   },
   "dependencies": {
-    "@hapi/joi": "^15.1.0",
+    "@hapi/joi": "^16.1.7",
     "ioredis": "^4.14.1",
     "lodash": "^4.17.15",
     "redis-errors": "^1.2.0",
@@ -45,7 +45,7 @@
     "@jest/test-sequencer": "^24.9.0",
     "@types/eslint": "^6.1.2",
     "@types/eslint-plugin-prettier": "^2.2.0",
-    "@types/hapi__joi": "^15.0.4",
+    "@types/hapi__joi": "^16.0.1",
     "@types/ioredis": "^4.0.18",
     "@types/lodash": "^4.14.144",
     "@types/prettier": "^1.18.3",
@@ -60,7 +60,7 @@
     "eslint-config-airbnb-base": "^14.0.0",
     "eslint-config-prettier": "^6.4.0",
     "eslint-plugin-import": "^2.18.2",
-    "eslint-plugin-jest": "^22.17.0",
+    "eslint-plugin-jest": "^22.19.0",
     "eslint-plugin-prettier": "^3.1.1",
     "jest": "^24.9.0",
     "jest-coverage-badges": "^1.1.2",

@@ -37,7 +37,7 @@ export class Task {
       throw new Error('Task requires an ID');
     }
 
-    const { value, error } = Joi.validate(rawData, schema, validationOptions);
+    const { value, error } = schema.validate(rawData, validationOptions);
 
     if (error) {
       throw new Error(`Invalid rawData for task: ${error}`);
