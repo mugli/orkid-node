@@ -1,6 +1,6 @@
 {
   "name": "orkid",
-  "version": "0.10.0",
+  "version": "0.11.0",
   "description": "Reliable and modern Redis-Streams based task queue for Node.js",
   "license": "MIT",
   "main": "./lib/index.js",
