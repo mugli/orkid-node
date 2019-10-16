@@ -18,21 +18,6 @@ describe('Consumer Unit', () => {
     await redis.flushall();
   });
 
-  afterAll(async () => {
-    // try {
-    //   for (const producer of producers) {
-    //     await producer.disconnect();
-    //   }
-    //   for (const consumer of consumers) {
-    //     await consumer._disconnect();
-    //   }
-    //   await redis.flushall();
-    //   await redis.disconnect();
-    // } catch (e) {
-    //   console.error(e);
-    // }
-  });
-
   test('should process task', async done => {
     const taskData = `test-${shortid.generate()}`;
 

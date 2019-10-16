@@ -78,7 +78,8 @@ export class Producer {
       const pipeline = this._redis!.pipeline();
 
       for (const t of c) {
-        pipeline.enqueue(this.qname, this._DEDUPSET, JSON.stringify(t.data || null), t.dedupKey || null, 0);
+        const { data = null, dedupKey = null } = t;
+        pipeline.enqueue(this.qname, this._DEDUPSET, JSON.stringify(data), dedupKey, 0);
       }
 
       const retval = await pipeline.exec();

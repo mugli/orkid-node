@@ -359,19 +359,20 @@ export class ConsumerUnit {
     });
 
     // Add to success list
+    const timestamp = new Date().getTime().toString();
     await this._redis
       .pipeline()
 
       .dequeue(this._QNAME, this._DEDUPSET, this._GRPNAME, task.id, task.dedupKey) // Remove from queue
 
-      .zadd(defaultOptions.RESULTLIST, new Date().getTime().toString(), resultVal)
-      .zremrangebyrank(defaultOptions.RESULTLIST, 0, defaultOptions.queueOptions.maxGlobalListSize! * -1)
+      .zadd(defaultOptions.RESULTLIST, timestamp, resultVal)
+      .zremrangebyrank(defaultOptions.RESULTLIST, 0, (defaultOptions.queueOptions.maxGlobalListSize! + 1) * -1)
 
-      .zadd(`${defaultOptions.RESULTLIST}:${this.qname}`, new Date().getTime().toString(), resultVal)
+      .zadd(`${defaultOptions.RESULTLIST}:${this.qname}`, timestamp, resultVal)
       .zremrangebyrank(
         `${defaultOptions.RESULTLIST}:${this.qname}`,
         0,
-        defaultOptions.queueOptions.maxIndividualQueueResultSize! * -1
+        (defaultOptions.queueOptions.maxIndividualQueueResultSize! + 1) * -1
       )
 
       .exec();
@@ -406,19 +407,21 @@ export class ConsumerUnit {
         .exec();
     } else {
       // Move to deadlist
+      const timestamp = new Date().getTime().toString();
+
       await this._redis
         .pipeline()
 
         .dequeue(this._QNAME, this._DEDUPSET, this._GRPNAME, task.id, task.dedupKey) // Remove from queue
 
-        .zadd(defaultOptions.DEADLIST, new Date().getTime().toString(), info)
-        .zremrangebyrank(defaultOptions.DEADLIST, 0, defaultOptions.queueOptions.maxGlobalListSize! * -1)
+        .zadd(defaultOptions.DEADLIST, timestamp, info)
+        .zremrangebyrank(defaultOptions.DEADLIST, 0, (defaultOptions.queueOptions.maxGlobalListSize! + 1) * -1)
 
-        .zadd(`${defaultOptions.DEADLIST}:${this.qname}`, new Date().getTime().toString(), info)
+        .zadd(`${defaultOptions.DEADLIST}:${this.qname}`, timestamp, info)
         .zremrangebyrank(
           `${defaultOptions.DEADLIST}:${this.qname}`,
           0,
-          defaultOptions.queueOptions.maxIndividualQueueResultSize! * -1
+          (defaultOptions.queueOptions.maxIndividualQueueResultSize! + 1) * -1
         )
 
         .hincrby(defaultOptions.STAT, 'dead', 1)
@@ -428,17 +431,18 @@ export class ConsumerUnit {
     }
 
     // Add to failed list in all cases
+    const timestamp = new Date().getTime().toString();
     await this._redis
       .pipeline()
 
-      .zadd(defaultOptions.FAILEDLIST, new Date().getTime().toString(), info)
-      .zremrangebyrank(defaultOptions.FAILEDLIST, 0, defaultOptions.queueOptions.maxGlobalListSize! * -1)
+      .zadd(defaultOptions.FAILEDLIST, timestamp, info)
+      .zremrangebyrank(defaultOptions.FAILEDLIST, 0, (defaultOptions.queueOptions.maxGlobalListSize! + 1) * -1)
 
-      .zadd(`${defaultOptions.FAILEDLIST}:${this.qname}`, new Date().getTime().toString(), info)
+      .zadd(`${defaultOptions.FAILEDLIST}:${this.qname}`, timestamp, info)
       .zremrangebyrank(
         `${defaultOptions.FAILEDLIST}:${this.qname}`,
         0,
-        defaultOptions.queueOptions.maxIndividualQueueResultSize! * -1
+        (defaultOptions.queueOptions.maxIndividualQueueResultSize! + 1) * -1
       )
 
       .hincrby(defaultOptions.STAT, 'failed', 1)

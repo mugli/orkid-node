@@ -17,21 +17,6 @@ describe('Consumer Unit - Cleanup', () => {
     await redis.flushall();
   });
 
-  afterAll(async () => {
-    // try {
-    //   for (const producer of producers) {
-    //     await producer.disconnect();
-    //   }
-    //   for (const consumer of consumers) {
-    //     await consumer._disconnect();
-    //   }
-    //   await redis.flushall();
-    //   await redis.disconnect();
-    // } catch (e) {
-    //   console.error(e);
-    // }
-  });
-
   test('claim ownership of unfinished tasks from inactive consumers', async () => {
     const qname = `queue-test-${shortid.generate()}`;
 

@@ -14,16 +14,6 @@ describe('Producer', () => {
     producer = new Producer('test-queue', {});
   });
 
-  afterAll(async () => {
-    // try {
-    //   await producer.disconnect();
-    //   await redis.flushall();
-    //   await redis.disconnect();
-    // } catch (e) {
-    //   console.error(e);
-    // }
-  });
-
   test('should create task', async () => {
     const id = await producer.addTask('test');
     expect(id).toBeDefined();
