@@ -2,12 +2,21 @@
 
 All notable changes to this project will be documented in this file. Dates are displayed in UTC.
 
+#### [v0.11.0](https://github.com/mugli/orkid/compare/v0.10.0...v0.11.0)
+
+> 16 October 2019
+
+- Add tests for result/failed/dead list trimming [`3e97fa9`](https://github.com/mugli/orkid/commit/3e97fa936d8fd307d9c685a34bfc44f7bf715383)
+- Breaking: change how result/failed/dead tasks are stored [`f76e1a7`](https://github.com/mugli/orkid/commit/f76e1a7b8d9105ca5ac9a4156dcd54765ec125d1)
+- Breaking: remove redisClient option from constructors [`a9930c8`](https://github.com/mugli/orkid/commit/a9930c8ccc06d2049972120752c70d99dd6afd1d)
+
 #### [v0.10.0](https://github.com/mugli/orkid/compare/v0.9.0...v0.10.0)
 
 > 7 October 2019
 
 - Breaking: change how queue names are stored internally [`6c98a0c`](https://github.com/mugli/orkid/commit/6c98a0c8ca0d2402dd6973e84511235ae2cf153a)
 - Update changelog [`16346c9`](https://github.com/mugli/orkid/commit/16346c927abaa56a5c7dbe55050cc9c1266b9775)
+- Release 0.10.0 [`21ddd3e`](https://github.com/mugli/orkid/commit/21ddd3ec99bd4d7cac1ed3ad1742defc69efb8cd)
 
 #### [v0.9.0](https://github.com/mugli/orkid/compare/v0.8.0...v0.9.0)
 
