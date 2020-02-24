@@ -51,7 +51,7 @@ export class Producer {
     this._isInitialized = true;
   }
 
-  async addTask(data = null, dedupKey: string | null = null): Promise<string | null> {
+  async addTask(data: Task['data'] = null, dedupKey: Task['dedupKey'] = null): Promise<string | null> {
     if (!this._redis) {
       this._connect();
     }
