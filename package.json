@@ -65,7 +65,7 @@
     "jest": "^24.9.0",
     "jest-coverage-badges": "^1.1.2",
     "prettier": "^1.18.2",
-    "release-it": "^12.4.3",
+    "release-it": "^15.6.0",
     "ts-node-dev": "^1.0.0-pre.41",
     "type-coverage": "^2.3.0",
     "typescript": "^3.6.4",
